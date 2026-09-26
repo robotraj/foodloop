@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FoodLoop — rescue surplus food in Amsterdam</title>
+  <meta name="description" content="Amsterdam restaurants share food they'd otherwise throw away. Reserve a portion nearby for a small packaging donation." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="landing.css" />
+  <link rel="stylesheet" href="motion.css" />
+</head>
+<body>
+  <nav class="nav">
+    <a class="logo" href="#top">Food<span>Loop</span></a>
+    <div class="nav-links">
+      <a href="#how">How it works</a>
+      <a href="#demo">See the agents</a>
+      <a href="#donation">Donation</a>
+      <a href="#restaurants">Restaurants</a>
+    </div>
+    <a class="btn btn-small" href="app.html">Open the app</a>
+  </nav>
+
+  <header class="hero" id="top">
+    <div class="hero-copy">
+      <p class="eyebrow">Amsterdam · food rescue</p>
+      <h1>Good food deserves a <em>second round.</em></h1>
+      <p class="lead">Restaurants tell us what's left at the end of the day. We alert you when it's nearby. You pick it up for a small donation that covers the packaging and keeps the app running.</p>
+      <div class="hero-ctas">
+        <a class="btn" href="app.html">Find food near me</a>
+        <a class="btn btn-ghost" href="#demo">Watch the agents work</a>
+      </div>
+      <dl class="stats" aria-live="polite">
+        <div><dt>Restaurants in the loop</dt><dd data-stat="restaurants">–</dd></div>
+        <div><dt>Portions shared</dt><dd data-stat="portionsShared">–</dd></div>
+        <div><dt>Live right now</dt><dd data-stat="liveListings">–</dd></div>
+      </dl>
+    </div>
+
+    <div class="hero-media">
+      <div class="hero-flower" data-sunflower data-stem data-delay="0.2"></div>
+
+      <figure class="player" id="player" tabindex="0" aria-label="10-second animation: how FoodLoop works. Press space to play or pause.">
+        <div class="stage-wrap">
+          <div class="stage" id="stage" aria-hidden="true">
+            <!-- Scene 1: leftovers at closing time -->
+            <div class="v-chip v-clock" data-in="0.2" data-out="2.4" data-fx="fade-up">19:45</div>
+            <svg class="v-store" data-in="0" data-out="2.4" data-fx="fade-up" viewBox="0 0 220 210">
+              <rect x="20" y="60" width="180" height="140" rx="6" class="v-wall" />
+              <path d="M10 40 H210 L200 78 H20 Z" class="v-awning" />
+              <path d="M40 40 L36 78 M70 40 L68 78 M100 40 V78 M130 40 L132 78 M160 40 L164 78 M190 40 L196 78" class="v-stripes" />
+              <rect x="40" y="96" width="70" height="56" rx="4" class="v-window" />
+              <rect x="128" y="96" width="50" height="104" rx="4" class="v-door" />
+              <rect x="50" y="14" width="120" height="26" rx="6" class="v-sign" />
+              <text x="110" y="32" text-anchor="middle" class="v-sign-text">TRATTORIA</text>
+            </svg>
+            <div class="v-tray" data-in="0.5" data-out="2.4" data-fx="fade-up">
+              <span data-in="0.7" data-out="2.4" data-fx="pop"></span><span data-in="0.8" data-out="2.4" data-fx="pop"></span>
+              <span data-in="0.9" data-out="2.4" data-fx="pop"></span><span data-in="1.0" data-out="2.4" data-fx="pop"></span>
+              <span data-in="1.1" data-out="2.4" data-fx="pop"></span><span data-in="1.2" data-out="2.4" data-fx="pop"></span>
+              <span data-in="1.3" data-out="2.4" data-fx="pop"></span><span data-in="1.4" data-out="2.4" data-fx="pop"></span>
+            </div>
+            <div class="v-label v-tray-label" data-in="1.6" data-out="2.4" data-fx="fade-up">8 portions left</div>
+
+            <!-- Scene 2: the outreach agent asks, the restaurant replies -->
+            <div class="v-agent" data-in="2.5" data-out="4.9" data-fx="fade">Outreach agent</div>
+            <div class="v-bubble v-out" data-in="2.6" data-out="4.9" data-fx="pop">Hoi! Any surplus food today?</div>
+            <div class="v-bubble v-in v-typing" data-in="3.1" data-out="3.6" data-fx="pop"><i></i><i></i><i></i></div>
+            <div class="v-bubble v-in" data-in="3.6" data-out="4.9" data-fx="pop">Ja! 8 portions of lasagne, pickup 21:00</div>
+            <div class="v-chips">
+              <span data-in="4.0" data-out="4.9" data-fx="pop">8 portions</span>
+              <span data-in="4.15" data-out="4.9" data-fx="pop">21:00–22:00</span>
+              <span data-in="4.3" data-out="4.9" data-fx="pop">vegetarian</span>
+            </div>
+
+            <!-- Scene 3: nearby users get an alert -->
+            <svg class="v-map" data-in="5.0" data-out="7.4" data-fx="fade" viewBox="0 0 640 400">
+              <path d="M120 400 A 260 260 0 0 1 520 400 M170 400 A 210 210 0 0 1 470 400 M220 400 A 160 160 0 0 1 420 400" class="v-canal" />
+              <path d="M0 120 H640 M0 250 H640 M200 0 V400 M450 0 V400" class="v-street" />
+            </svg>
+            <div class="v-radius" data-in="5.3" data-out="7.4" data-fx="grow" data-dur="0.9"></div>
+            <div class="v-pin" data-in="5.1" data-out="7.4" data-fx="pop"></div>
+            <span class="v-user" style="left:210px;top:150px" data-in="6.0" data-out="7.4" data-fx="ping"></span>
+            <span class="v-user" style="left:300px;top:110px" data-in="6.1" data-out="7.4" data-fx="ping"></span>
+            <span class="v-user" style="left:380px;top:250px" data-in="6.2" data-out="7.4" data-fx="ping"></span>
+            <span class="v-user" style="left:250px;top:280px" data-in="6.3" data-out="7.4" data-fx="ping"></span>
+            <span class="v-user v-far" style="left:40px;top:60px" data-in="5.2" data-out="7.4" data-fx="fade"></span>
+            <span class="v-user v-far" style="left:590px;top:330px" data-in="5.2" data-out="7.4" data-fx="fade"></span>
+            <div class="v-phone v-phone-alert" data-in="6.3" data-out="7.4" data-fx="slide-left">
+              <div class="v-notif" data-in="6.7" data-out="7.4" data-fx="pop"><small>NEW FOOD NEARBY</small><b>Lasagne</b>0.4 km · 8 portions</div>
+            </div>
+
+            <!-- Scene 4: pickup, donation, food saved -->
+            <div class="v-phone v-phone-code" data-in="7.5" data-fx="fade-up">
+              <small>Pickup code</small>
+              <b class="v-code">482 913</b>
+              <span class="v-donation" data-in="8.0" data-fx="pop">€1.25 donation</span>
+            </div>
+            <div class="v-flower" id="videoFlower"></div>
+            <div class="v-title" data-in="9.0" data-fx="fade-up">Food saved.</div>
+            <div class="v-logo" data-in="9.3" data-fx="fade-up">Food<span>Loop</span></div>
+          </div>
+        </div>
+
+        <button class="big-play" id="bigPlay" aria-label="Play">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+        </button>
+        <figcaption class="v-caption" id="caption" aria-live="polite"></figcaption>
+        <div class="controls">
+          <button id="playBtn" aria-label="Play">
+            <svg viewBox="0 0 24 24" class="i-play"><path d="M8 5v14l11-7z" /></svg>
+            <svg viewBox="0 0 24 24" class="i-pause"><path d="M7 5h4v14H7zM13 5h4v14h-4z" /></svg>
+            <svg viewBox="0 0 24 24" class="i-replay"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z" /></svg>
+          </button>
+          <input type="range" id="scrub" min="0" max="10000" step="10" value="0" aria-label="Seek" />
+          <span class="clock" id="clock">0:00 / 0:10</span>
+        </div>
+      </figure>
+    </div>
+  </header>
+
+  <section class="section" id="how">
+    <p class="eyebrow">How it works</p>
+    <h2>Three agents, one loop</h2>
+    <div class="steps">
+      <article class="step">
+        <span class="step-num">1</span>
+        <h3>Finder</h3>
+        <p>Maps restaurants, cafés and bakeries across Amsterdam using OpenStreetMap.</p>
+      </article>
+      <article class="step">
+        <span class="step-num">2</span>
+        <h3>Outreach</h3>
+        <p>Asks restaurants what's left over today and reads their replies, in Dutch or English, to work out the dishes, portions and pickup time.</p>
+      </article>
+      <article class="step">
+        <span class="step-num">3</span>
+        <h3>Publisher</h3>
+        <p>Posts the food in the app with fair-share limits and alerts everyone within walking distance.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section section-tint" id="near">
+    <div class="split">
+      <div>
+        <p class="eyebrow">Right now</p>
+        <h2>Is there food near you?</h2>
+        <p>Check what's been posted around you. We only use your location for this search.</p>
+        <div class="chips" role="radiogroup" aria-label="Search radius">
+          <button class="chip" role="radio" aria-checked="false" data-radius="1">1 km</button>
+          <button class="chip" role="radio" aria-checked="true" data-radius="2">2 km</button>
+          <button class="chip" role="radio" aria-checked="false" data-radius="5">5 km</button>
+        </div>
+        <button class="btn" id="checkNear">Check near me</button>
+        <div class="near-result" id="nearResult"></div>
+      </div>
+      <div class="phone" aria-hidden="true">
+        <div class="phone-screen">
+          <div class="phone-bar"><span>9:41</span><span>FoodLoop</span></div>
+          <div class="phone-feed" id="phoneFeed"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="demo">
+    <p class="eyebrow">Try it</p>
+    <h2>Be the restaurant for a moment</h2>
+    <p class="section-lead">Pick a reply, or write your own, and see what the agents do with it.</p>
+
+    <div class="demo">
+      <div class="demo-input">
+        <div class="bubble bubble-out">Hoi! Do you have any surplus food today? Roughly how many portions, and when could it be picked up?</div>
+        <div class="samples" id="samples">
+          <button class="chip" data-text="Ja! We have 8 portions of vegetarian lasagne and 5 croissants, pickup 21:00-22:30">Lasagne &amp; croissants</button>
+          <button class="chip" data-text="Yes we have some bread left">Vague “yes”</button>
+          <button class="chip" data-text="Nee, sorry — nothing today">Nothing today</button>
+          <button class="chip" data-text="STOP">STOP</button>
+        </div>
+        <label class="sr-only" for="demoText">Restaurant reply</label>
+        <textarea id="demoText" rows="3">Ja! We have 8 portions of vegetarian lasagne and 5 croissants, pickup 21:00-22:30</textarea>
+        <button class="btn" id="runDemo">Run the agents</button>
+      </div>
+
+      <ol class="pipeline" id="pipeline">
+        <li data-stage="read"><h3>Outreach reads the reply</h3><div class="stage-body"></div></li>
+        <li data-stage="decide"><h3>Outreach decides what to do</h3><div class="stage-body"></div></li>
+        <li data-stage="publish"><h3>Publisher posts and alerts</h3><div class="stage-body"></div></li>
+      </ol>
+    </div>
+    <p class="muted small">The demo uses FoodLoop's quick rule-based reader. In the live app, Claude reads the replies, so it also copes with messy messages.</p>
+  </section>
+
+  <section class="section section-tint" id="donation">
+    <div class="split">
+      <div>
+        <p class="eyebrow">Fair by design</p>
+        <h2>You donate, you don't pay for the food</h2>
+        <p>Restaurants give their surplus for free. Your donation covers the takeaway packaging and helps keep FoodLoop running. Anything extra is up to you.</p>
+        <ul class="rules" id="rules"></ul>
+      </div>
+      <div class="calc card">
+        <label for="portions">Portions <output id="portionsOut">1</output></label>
+        <input type="range" id="portions" min="1" max="2" value="1" />
+        <label for="extra">Extra tip <output id="extraOut">€0.00</output></label>
+        <input type="range" id="extra" min="0" max="5" step="0.5" value="0" />
+        <div class="bar" id="bar" aria-hidden="true">
+          <span class="bar-pack"></span><span class="bar-app"></span><span class="bar-extra"></span>
+        </div>
+        <dl class="breakdown">
+          <div><dt><i class="dot dot-pack"></i>Packaging</dt><dd id="packOut"></dd></div>
+          <div><dt><i class="dot dot-app"></i>App</dt><dd id="appOut"></dd></div>
+          <div><dt><i class="dot dot-extra"></i>Extra</dt><dd id="extraOut2"></dd></div>
+          <div class="total"><dt>Your donation</dt><dd id="totalOut"></dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="restaurants">
+    <div class="split">
+      <div>
+        <p class="eyebrow">For restaurants</p>
+        <h2>Less waste, zero admin</h2>
+        <p>No dashboard to learn. We send you a short message; you reply with what's left, just like texting a friend. We handle the listing, the reservations and the pickup codes.</p>
+      </div>
+      <ul class="benefits">
+        <li><strong>One message a day, at most.</strong> Reply STOP and we'll never contact you again.</li>
+        <li><strong>Pickup on your terms.</strong> You choose the time window; listings expire automatically.</li>
+        <li><strong>Verified pickups.</strong> Every reservation has a 6-digit code.</li>
+        <li><strong>Free for you.</strong> Users' donations cover packaging and running costs.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section faq">
+    <h2>Questions</h2>
+    <details><summary>Why is there a limit on how much I can reserve?</summary><p>So surplus reaches as many people as possible. Each person can reserve a few portions per listing and from a couple of restaurants per day.</p></details>
+    <details><summary>How do I get alerts?</summary><p>Join in the app, share your location and choose a radius. When a restaurant nearby posts food, you get an alert straight away.</p></details>
+    <details><summary>What if I can't make it?</summary><p>Cancel the reservation in the app so the portions go back to others.</p></details>
+    <details><summary>Is the food safe?</summary><p>It's the same food the restaurant serves that day, collected within the window they set. Check the dietary tags, and ask at pickup if you have allergies.</p></details>
+  </section>
+
+  <section class="cta">
+    <div class="cta-flowers" aria-hidden="true">
+      <div data-sunflower data-stem></div>
+      <div data-sunflower data-stem data-delay="0.35"></div>
+      <div data-sunflower data-stem data-delay="0.7"></div>
+    </div>
+    <h2>Hungry, and hate waste?</h2>
+    <a class="btn btn-light" href="app.html">Join FoodLoop</a>
+  </section>
+
+  <footer class="footer">
+    <span>FoodLoop · Amsterdam</span>
+    <a href="admin.html">Agent console</a>
+  </footer>
+
+  <script src="sunflower.js"></script>
+  <script src="video.js"></script>
+  <script src="landing.js"></script>
+</body>
+</html>

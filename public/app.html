@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FoodLoop</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1><a href="/" style="text-decoration:none;color:inherit">Food<span>Loop</span></a></h1>
+    <span class="row"><span class="live" id="live">Live</span><span class="muted" id="whoami"></span></span>
+  </header>
+
+  <main>
+    <section class="card" id="signup">
+      <h2>Rescue surplus food near you</h2>
+      <p class="muted">Amsterdam restaurants share food they'd otherwise throw away. Reserve a portion, pay a small donation for packaging and the app, and pick it up.</p>
+      <div class="row">
+        <input id="name" placeholder="Your name" />
+        <label class="muted">Alert radius
+          <select id="radius">
+            <option value="1">1 km</option><option value="2" selected>2 km</option>
+            <option value="5">5 km</option><option value="10">10 km</option>
+          </select>
+        </label>
+        <button id="join">Join &amp; use my location</button>
+      </div>
+      <p class="error" id="signupError"></p>
+    </section>
+
+    <section class="card hidden" id="settings">
+      <div class="row">
+        <span class="muted" id="locationLabel"></span>
+        <button class="secondary" id="relocate">Update my location</button>
+        <label class="muted">Radius
+          <select id="radius2">
+            <option value="1">1 km</option><option value="2">2 km</option>
+            <option value="5">5 km</option><option value="10">10 km</option>
+          </select>
+        </label>
+        <button class="secondary" id="enableAlerts">Enable browser alerts</button>
+      </div>
+      <p class="muted" id="limits"></p>
+    </section>
+
+    <section class="hidden" id="feed">
+      <h2 style="margin:0 0 8px">Available near you</h2>
+      <div class="grid" id="listings"></div>
+      <p class="muted" id="empty">No food available in your area right now — we'll notify you as soon as a restaurant posts something.</p>
+    </section>
+
+    <section class="card hidden" id="mine">
+      <h2>My reservations</h2>
+      <div id="reservations"></div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast"></div>
+  <script src="app.js"></script>
+</body>
+</html>

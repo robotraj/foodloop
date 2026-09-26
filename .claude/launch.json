@@ -1,0 +1,7 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "foodloop", "runtimeExecutable": "npm", "runtimeArgs": ["start"], "port": 3000 },
+    { "name": "foodloop-live", "runtimeExecutable": "npm", "runtimeArgs": ["run", "live"], "port": 3000 }
+  ]
+}

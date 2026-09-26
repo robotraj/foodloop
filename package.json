@@ -1,0 +1,29 @@
+{
+  "name": "foodloop",
+  "version": "1.0.0",
+  "description": "FoodLoop - rescue surplus restaurant food in Amsterdam",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "live": "tsx src/server.ts --simulate",
+    "typecheck": "tsc --noEmit",
+    "find": "tsx src/cli.ts find",
+    "seed": "tsx src/cli.ts seed",
+    "outreach": "tsx src/cli.ts outreach"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.128.0",
+    "express": "^5.2.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.3",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

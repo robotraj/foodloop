@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FoodLoop Agent Console</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Food<span>Loop</span> · agents</h1>
+    <span class="muted" id="mode"></span>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="stats" id="stats"></div>
+    </section>
+
+    <section class="card">
+      <h2>Live simulation <span class="live" id="live">Live</span></h2>
+      <p class="muted">Real Amsterdam restaurants reply with made-up surplus, which goes through the real agents. Simulated neighbours reserve portions under the same limits as real users. Everything it posts is labelled “Test data”.</p>
+      <div class="row">
+        <button id="simToggle">Start simulation</button>
+        <label class="muted">Speed
+          <select id="simSpeed">
+            <option value="8">Fast (every 8 s)</option>
+            <option value="20" selected>Normal (every 20 s)</option>
+            <option value="45">Slow (every 45 s)</option>
+          </select>
+        </label>
+        <button class="secondary" id="simClear">Clear simulated data</button>
+        <span class="muted" id="simInfo"></span>
+      </div>
+      <ul class="feed" id="activity"></ul>
+    </section>
+
+    <section class="card">
+      <h2>1 · Restaurant finder</h2>
+      <p class="muted">Pulls restaurants, cafés and takeaways in Amsterdam from OpenStreetMap.</p>
+      <div class="row">
+        <label class="muted">Limit <input id="findLimit" type="number" value="50" style="width:90px" /></label>
+        <button id="find">Find restaurants</button>
+        <button class="secondary" id="seed">Add 5 fictional restaurants</button>
+      </div>
+      <p class="muted" id="findResult"></p>
+    </section>
+
+    <section class="card">
+      <h2>2 · Outreach</h2>
+      <p class="muted">Messages restaurants that haven't been contacted yet. The channel is a simulated inbox — type a restaurant's reply below to see the agents react.</p>
+      <div class="row">
+        <label class="muted">How many <input id="outreachLimit" type="number" value="5" style="width:70px" /></label>
+        <button id="outreach">Run outreach</button>
+      </div>
+      <p class="muted" id="outreachResult"></p>
+    </section>
+
+    <section class="card">
+      <h2>Conversations</h2>
+      <div class="row">
+        <select id="restaurant" style="flex:1"></select>
+      </div>
+      <div id="thread"></div>
+      <textarea id="reply" placeholder='Simulate the restaurant reply, e.g. "Ja! We have 8 portions of vegetarian lasagne and 5 croissants, pickup 21:00-22:00"'></textarea>
+      <div class="row">
+        <button id="sendReply">Send as restaurant</button>
+        <span class="muted" id="replyResult"></span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>3 · Published listings</h2>
+      <div id="listings"></div>
+    </section>
+  </main>
+
+  <script src="admin.js"></script>
+</body>
+</html>
