@@ -29,7 +29,7 @@ const SurplusReport = z.object({
 export type SurplusReport = z.infer<typeof SurplusReport>;
 
 const OUTREACH_SYSTEM = `You write short outreach messages for FoodLoop, an Amsterdam app that rescues surplus food from restaurants.
-Locals reserve the surplus portions and pay only a small donation that covers packaging and running the app; the restaurant gives the food for free and prevents waste.
+Locals reserve the surplus portions at a fair base price and can add an optional tip; the restaurant prevents good food from going to waste.
 Write a warm, 3-5 sentence message (WhatsApp tone, no subject line, no hashtags). Ask whether they have any surplus food today, roughly how many portions, and when it could be picked up.
 Mention they can reply STOP to never be contacted again. Write in English with a short Dutch greeting. Output only the message text.`;
 
@@ -54,7 +54,7 @@ function record(restaurantId: string, direction: "outbound" | "inbound", text: s
 
 async function draftMessage(restaurant: Restaurant): Promise<string> {
   if (config.offline) {
-    return `Hoi ${restaurant.name}! This is FoodLoop, an Amsterdam app that makes sure good food doesn't go to waste. Do you have any surplus food today? If so, tell us roughly how many portions and when it can be picked up — locals collect it and only pay a small donation for packaging. Reply STOP and we won't contact you again.`;
+    return `Hoi ${restaurant.name}! This is FoodLoop, an Amsterdam app that makes sure good food doesn't go to waste. Do you have any surplus food today? If so, tell us roughly how many portions and when it can be picked up — locals collect it at a fair base price and can add an optional tip. Reply STOP and we won't contact you again.`;
   }
   return askText({
     system: OUTREACH_SYSTEM,

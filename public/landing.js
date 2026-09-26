@@ -19,8 +19,7 @@ async function api(path, options = {}) {
 let cfg = {
   maxPortionsPerListingPerUser: 2,
   maxReservationsPerDayPerUser: 2,
-  packagingPerPortion: 0.75,
-  platformFee: 0.5,
+  basePricePerPortion: 2.5,
   center: { lat: 52.3731, lng: 4.8926 },
 };
 
@@ -236,22 +235,20 @@ $("runDemo").addEventListener("click", async (e) => {
   }
 });
 
-// ---------- Donation calculator ----------
+// ---------- Price and tip calculator ----------
 
 function updateCalc() {
   const portions = Number($("portions").value);
   const extra = Number($("extra").value);
-  const pack = cfg.packagingPerPortion * portions;
-  const app = cfg.platformFee;
+  const base = cfg.basePricePerPortion * portions;
   $("portionsOut").textContent = portions;
   $("extraOut").textContent = euro(extra);
-  $("packOut").textContent = euro(pack);
-  $("appOut").textContent = euro(app);
+  $("packOut").textContent = euro(base);
   $("extraOut2").textContent = euro(extra);
-  $("totalOut").textContent = euro(pack + app + extra);
+  $("totalOut").textContent = euro(base + extra);
   const [p, a, x] = $("bar").children;
-  p.style.flexGrow = pack;
-  a.style.flexGrow = app;
+  p.style.flexGrow = base;
+  a.style.flexGrow = 0;
   x.style.flexGrow = extra;
 }
 $("portions").addEventListener("input", updateCalc);
@@ -261,7 +258,7 @@ function renderRules() {
   $("rules").innerHTML = [
     `Up to ${cfg.maxPortionsPerListingPerUser} portions per listing, so there's enough to go round`,
     `Food from up to ${cfg.maxReservationsPerDayPerUser} restaurants per day`,
-    `Minimum donation: ${euro(cfg.packagingPerPortion)} packaging per portion + ${euro(cfg.platformFee)} for the app`,
+    `Base price: ${euro(cfg.basePricePerPortion)} per portion, with an optional tip`,
     "Cancel anytime and your portions go back to others",
   ]
     .map((r) => `<li>${esc(r)}</li>`)

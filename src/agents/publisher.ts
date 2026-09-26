@@ -36,7 +36,7 @@ async function writeCopy(restaurant: Restaurant, report: SurplusReport) {
     };
   }
   return askStructured({
-    system: "You write listings for FoodLoop, an app where Amsterdam locals reserve surplus restaurant food for a small packaging donation.",
+    system: "You write listings for FoodLoop, an app where Amsterdam locals reserve surplus restaurant food at a fair base price with an optional tip.",
     prompt: `Restaurant: ${restaurant.name}${restaurant.cuisine ? ` (${restaurant.cuisine})` : ""}\nItems: ${items}\nDietary: ${report.dietary.join(", ") || "not specified"}`,
     schema: ListingCopy,
     effort: "low",

@@ -9,7 +9,7 @@
     [0, "7:45 pm — a restaurant has 8 portions left over"],
     [2.5, "Our agent asks; the restaurant just replies"],
     [5, "Everyone within walking distance gets an alert"],
-    [7.5, "Pick it up for a small donation. Food saved."],
+    [7.5, "Pick it up at a fair price. Food saved."],
   ];
 
   const player = document.getElementById("player");

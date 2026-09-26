@@ -26,7 +26,7 @@ async function api(path, options = {}) {
   return data;
 }
 
-const minDonation = (portions) => Math.round((cfg.packagingPerPortion * portions + cfg.platformFee) * 100) / 100;
+const basePrice = (portions) => Math.round(cfg.basePricePerPortion * portions * 100) / 100;
 
 function toast(text) {
   const el = $("toast");
@@ -61,7 +61,7 @@ function showApp() {
   $("locationLabel").textContent = `Location ${user.lat.toFixed(3)}, ${user.lng.toFixed(3)} · alerts within ${user.radiusKm} km`;
   $("limits").textContent =
     `Fair-share rules: max ${cfg.maxPortionsPerListingPerUser} portions per listing and ${cfg.maxReservationsPerDayPerUser} listings per day. ` +
-    `Minimum donation: ${euro(cfg.packagingPerPortion)} packaging per portion + ${euro(cfg.platformFee)} for the app.`;
+    `Base price: ${euro(cfg.basePricePerPortion)} per portion. Tips are optional.`;
   connectEvents();
   refresh();
 }
@@ -112,7 +112,7 @@ function renderListings(listings) {
   for (const card of $("listings").querySelectorAll(".listing")) {
     kept[card.dataset.id] = {
       portions: card.querySelector(".portions")?.value,
-      donation: card.querySelector(".donation")?.value,
+      tip: card.querySelector(".tip")?.value,
       error: card.querySelector(".error")?.textContent,
     };
   }
@@ -134,7 +134,7 @@ function renderListings(listings) {
           ${l.remainingPortions} of ${l.totalPortions} portions left · max ${l.maxPerUser} per person</div>
         <div class="row">
           <label class="muted">Portions <select class="portions">${options}</select></label>
-          <label class="muted">Donation € <input class="donation" type="number" step="0.5" style="width:80px" value="${minDonation(1).toFixed(2)}" /></label>
+          <label class="muted">Tip € <input class="tip" type="number" min="0" step="0.5" style="width:80px" value="0.00" /></label>
           <button class="reserve">Reserve</button>
         </div>
         <p class="error"></p>
@@ -147,11 +147,11 @@ function renderListings(listings) {
     if (k) {
       const sel = card.querySelector(".portions");
       if (k.portions && [...sel.options].some((o) => o.value === k.portions)) sel.value = k.portions;
-      if (k.donation) card.querySelector(".donation").value = k.donation;
+      if (k.tip) card.querySelector(".tip").value = k.tip;
       card.querySelector(".error").textContent = k.error || "";
     }
     if (seenListings && !seenListings.has(card.dataset.id)) card.classList.add("flash");
-    if (card.dataset.id === focused) card.querySelector(".donation").focus();
+    if (card.dataset.id === focused) card.querySelector(".tip").focus();
   }
   seenListings = new Set(listings.map((l) => l.id));
 }
@@ -175,11 +175,11 @@ function renderRestaurants(restaurants) {
 
 function renderReservations(list) {
   $("reservations").innerHTML = list.length
-    ? `<table><tr><th>Food</th><th>Portions</th><th>Donation</th><th>Pickup code</th><th></th></tr>${list
+    ? `<table><tr><th>Food</th><th>Portions</th><th>Base price</th><th>Tip</th><th>Total</th><th>Pickup code</th><th></th></tr>${list
         .map(
           (r) => `<tr>
             <td>${esc(r.listing?.title)}<div class="muted">${esc(r.listing?.restaurantName)} · ${r.listing ? `${time(r.listing.pickupStart)}–${time(r.listing.pickupEnd)}` : ""}</div></td>
-            <td>${r.portions}</td><td>${euro(r.donation)}</td>
+            <td>${r.portions}</td><td>${euro(r.basePrice)}</td><td>${euro(r.tip)}</td><td>${euro(r.total)}</td>
             <td>${r.status === "reserved" ? `<span class="code">${r.pickupCode}</span>` : `<span class="muted">${r.status}</span>`}</td>
             <td>${r.status === "reserved" ? `<button class="secondary cancel" data-id="${r.id}">Cancel</button>` : ""}</td>
           </tr>`,
@@ -191,7 +191,7 @@ function renderReservations(list) {
 $("listings").addEventListener("change", (e) => {
   if (!e.target.classList.contains("portions")) return;
   const card = e.target.closest(".listing");
-  card.querySelector(".donation").value = minDonation(Number(e.target.value)).toFixed(2);
+  card.querySelector(".tip").value = "0.00";
 });
 
 $("listings").addEventListener("click", async (e) => {
@@ -207,10 +207,10 @@ $("listings").addEventListener("click", async (e) => {
         userId: user.id,
         listingId: card.dataset.id,
         portions: Number(card.querySelector(".portions").value),
-        donation: Number(card.querySelector(".donation").value),
+        tip: Number(card.querySelector(".tip").value),
       },
     });
-    toast(`Reserved! Show code ${r.pickupCode} at ${r.listing.restaurantName}. Donation ${euro(r.donation)} (payment is simulated in this prototype).`);
+    toast(`Reserved! Show code ${r.pickupCode} at ${r.listing.restaurantName}. Total ${euro(r.total)} including a ${euro(r.tip)} tip (payment is simulated in this prototype).`);
     refresh();
   } catch (err) {
     error.textContent = err.message;

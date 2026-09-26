@@ -1,6 +1,6 @@
 // Reservation rules shared by the HTTP API and the simulator, so simulated users obey the same limits.
 import crypto from "node:crypto";
-import { config, minimumDonation } from "./config.js";
+import { basePrice, config } from "./config.js";
 import { db, newId, nowIso, save, type Reservation } from "./store.js";
 import { broadcast } from "./notify.js";
 
@@ -12,14 +12,14 @@ export class HttpError extends Error {
 
 const amsterdamDay = (iso: string) => new Date(iso).toLocaleDateString("en-CA", { timeZone: "Europe/Amsterdam" });
 
-export function reserve(opts: { userId: string; listingId: string; portions: number; donation: number }) {
+export function reserve(opts: { userId: string; listingId: string; portions: number; tip: number }) {
   const user = db.users.find((u) => u.id === opts.userId);
   if (!user) throw new HttpError(404, "User not found");
   const listing = db.listings.find((l) => l.id === opts.listingId);
   if (!listing) throw new HttpError(404, "Listing not found");
   if (listing.status !== "active") throw new HttpError(409, `This listing is ${listing.status.replace("_", " ")}`);
   const portions = Math.floor(opts.portions);
-  const donation = Math.round(opts.donation * 100) / 100;
+  const tip = Math.round(opts.tip * 100) / 100;
   if (!(portions >= 1)) throw new HttpError(400, "Reserve at least 1 portion");
 
   const active = db.reservations.filter((r) => r.userId === user.id && r.status !== "cancelled");
@@ -39,15 +39,17 @@ export function reserve(opts: { userId: string; listingId: string; portions: num
   }
   if (portions > listing.remainingPortions) throw new HttpError(409, `Only ${listing.remainingPortions} portion(s) left`);
 
-  const minimum = minimumDonation(portions);
-  if (donation < minimum) throw new HttpError(400, `Minimum donation for ${portions} portion(s) is €${minimum.toFixed(2)}`);
+  if (tip < 0) throw new HttpError(400, "Tip cannot be negative");
+  const price = basePrice(portions);
 
   const reservation: Reservation = {
     id: newId(),
     listingId: listing.id,
     userId: user.id,
     portions,
-    donation,
+    basePrice: price,
+    tip,
+    total: price + tip,
     pickupCode: crypto.randomInt(100000, 1000000).toString(),
     status: "reserved",
     createdAt: nowIso(),

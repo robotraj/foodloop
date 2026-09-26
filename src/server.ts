@@ -41,8 +41,7 @@ app.get("/api/config", (_req, res) => {
     model: config.offline ? null : config.model,
     maxPortionsPerListingPerUser: config.maxPortionsPerListingPerUser,
     maxReservationsPerDayPerUser: config.maxReservationsPerDayPerUser,
-    packagingPerPortion: config.packagingPerPortion,
-    platformFee: config.platformFee,
+    basePricePerPortion: config.basePricePerPortion,
     defaultRadiusKm: config.defaultRadiusKm,
     center: AMSTERDAM_CENTER,
   });
@@ -146,7 +145,7 @@ app.post("/api/reservations", (req, res) => {
     userId: String(req.body?.userId),
     listingId: String(req.body?.listingId),
     portions: numberOr(req.body?.portions, 1),
-    donation: numberOr(req.body?.donation, 0),
+    tip: numberOr(req.body?.tip, 0),
   });
   res.status(201).json({ ...reservation, listing });
 });
@@ -182,7 +181,8 @@ app.get("/api/admin/overview", admin, (_req, res) => {
       users: db.users.length,
       reservations: db.reservations.filter((r) => r.status !== "cancelled").length,
       portionsRescued: db.reservations.filter((r) => r.status !== "cancelled").reduce((s, r) => s + r.portions, 0),
-      donations: db.reservations.filter((r) => r.status !== "cancelled").reduce((s, r) => s + r.donation, 0),
+      tips: db.reservations.filter((r) => r.status !== "cancelled").reduce((s, r) => s + r.tip, 0),
+      revenue: db.reservations.filter((r) => r.status !== "cancelled").reduce((s, r) => s + r.total, 0),
     },
   });
 });

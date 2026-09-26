@@ -70,7 +70,9 @@ export interface Reservation {
   listingId: string;
   userId: string;
   portions: number;
-  donation: number;
+  basePrice: number;
+  tip: number;
+  total: number;
   pickupCode: string;
   status: "reserved" | "collected" | "cancelled";
   createdAt: string;
@@ -104,7 +106,16 @@ const empty = (): Data => ({
 
 function load(): Data {
   try {
-    return { ...empty(), ...JSON.parse(fs.readFileSync(config.dataFile, "utf8")) };
+    const data = { ...empty(), ...JSON.parse(fs.readFileSync(config.dataFile, "utf8")) } as Data & {
+      reservations: Array<Reservation & { donation?: number }>;
+    };
+    data.reservations = data.reservations.map((reservation) => {
+      if (reservation.basePrice !== undefined) return reservation;
+      const total = (reservation as Reservation & { donation?: number }).donation ?? 0;
+      const base = Math.round(config.basePricePerPortion * reservation.portions * 100) / 100;
+      return { ...reservation, basePrice: base, tip: Math.max(0, total - base), total };
+    });
+    return data;
   } catch {
     return empty();
   }

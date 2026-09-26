@@ -1,7 +1,7 @@
 // Live simulation for testing. Real Amsterdam restaurants (from OpenStreetMap) "reply" with made-up
 // surplus, which goes through the real outreach → publisher pipeline; simulated neighbours then
 // reserve portions under the same limits as real users. Everything it publishes is flagged demo.
-import { config, minimumDonation } from "./config.js";
+import { basePrice, config } from "./config.js";
 import { db, newId, nowIso, save, type Restaurant } from "./store.js";
 import { AMSTERDAM_CENTER, distanceKm } from "./geo.js";
 import { broadcast } from "./notify.js";
@@ -150,7 +150,7 @@ function neighbourEvents() {
     if (!bot) continue;
     const portions = Math.min(rand(1, listing.maxPerUser), listing.remainingPortions);
     try {
-      reserve({ userId: bot.id, listingId: listing.id, portions, donation: minimumDonation(portions) + pick([0, 0, 0, 0.5, 1, 2]) });
+      reserve({ userId: bot.id, listingId: listing.id, portions, tip: pick([0, 0, 0, 0.5, 1, 2]) });
       log("reservation", `${bot.name.replace(" (sim)", "")} reserved ${portions} at ${listing.restaurantName} · ${listing.remainingPortions} left`);
     } catch {
       // Hit a limit or sold out — exactly what should happen; try another listing next tick.
