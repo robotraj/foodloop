@@ -118,6 +118,28 @@ app.get("/api/listings", (req, res) => {
   res.json(listings);
 });
 
+app.get("/api/restaurants/nearby", (req, res) => {
+  const lat = numberOr(req.query.lat, AMSTERDAM_CENTER.lat);
+  const lng = numberOr(req.query.lng, AMSTERDAM_CENTER.lng);
+  const radiusKm = Math.min(25, Math.max(0.5, numberOr(req.query.radiusKm, 10)));
+  const restaurants = db.restaurants
+    .filter((restaurant) => restaurant.status !== "opted_out")
+    .map((restaurant) => ({
+      name: restaurant.name,
+      address: restaurant.address,
+      phone: restaurant.phone,
+      website: restaurant.website,
+      email: restaurant.email,
+      cuisine: restaurant.cuisine,
+      lat: restaurant.lat,
+      lng: restaurant.lng,
+      distanceKm: Math.round(distanceKm({ lat, lng }, restaurant) * 10) / 10,
+    }))
+    .filter((restaurant) => restaurant.distanceKm <= radiusKm)
+    .sort((a, b) => a.distanceKm - b.distanceKm);
+  res.json(restaurants);
+});
+
 app.post("/api/reservations", (req, res) => {
   expireListings();
   const { reservation, listing } = reserve({
