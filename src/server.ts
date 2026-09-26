@@ -9,10 +9,13 @@ import { clearSimulatedData, simulatorStatus, startSimulator, stopSimulator } fr
 import { findRestaurants, seedDemoRestaurants } from "./agents/finder.js";
 import { handleReply, parseReplyOffline, runOutreach } from "./agents/outreach.js";
 import { expireListings } from "./agents/publisher.js";
+import path from "node:path";
 
 export const app = express();
 app.use(express.json());
-app.use(express.static("public"));
+const publicDir = path.resolve(process.cwd(), "public");
+app.use(express.static(publicDir));
+app.get("/", (_req, res) => res.sendFile(path.join(publicDir, "index.html")));
 
 const numberOr = (value: unknown, fallback: number) => {
   const n = Number(value);
