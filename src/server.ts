@@ -10,7 +10,7 @@ import { findRestaurants, seedDemoRestaurants } from "./agents/finder.js";
 import { handleReply, parseReplyOffline, runOutreach } from "./agents/outreach.js";
 import { expireListings } from "./agents/publisher.js";
 
-const app = express();
+export const app = express();
 app.use(express.json());
 app.use(express.static("public"));
 
@@ -233,16 +233,18 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
 
 setInterval(expireListings, 60_000).unref();
 
-app.listen(config.port, () => {
-  console.log(`FoodLoop running on http://localhost:${config.port}  (admin: /admin.html)`);
-  for (const nets of Object.values(os.networkInterfaces())) {
-    for (const net of nets ?? []) {
-      if (net.family === "IPv4" && !net.internal) console.log(`  On your phone (same Wi-Fi): http://${net.address}:${config.port}`);
+if (process.env.VERCEL !== "1") {
+  app.listen(config.port, () => {
+    console.log(`FoodLoop running on http://localhost:${config.port}  (admin: /admin.html)`);
+    for (const nets of Object.values(os.networkInterfaces())) {
+      for (const net of nets ?? []) {
+        if (net.family === "IPv4" && !net.internal) console.log(`  On your phone (same Wi-Fi): http://${net.address}:${config.port}`);
+      }
     }
-  }
-  console.log(config.offline ? "Claude: OFFLINE (rule-based fallbacks). Set ANTHROPIC_API_KEY to enable the AI agents." : `Claude: ${config.model}`);
-  if (process.argv.includes("--simulate") || process.env.SIMULATE === "1") {
-    startSimulator().catch((err) => console.error("Simulator failed to start:", err));
-    console.log("Live simulation: ON (pause it in the agent console)");
-  }
-});
+    console.log(config.offline ? "Claude: OFFLINE (rule-based fallbacks). Set ANTHROPIC_API_KEY to enable the AI agents." : `Claude: ${config.model}`);
+    if (process.argv.includes("--simulate") || process.env.SIMULATE === "1") {
+      startSimulator().catch((err) => console.error("Simulator failed to start:", err));
+      console.log("Live simulation: ON (pause it in the agent console)");
+    }
+  });
+}
