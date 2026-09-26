@@ -8,7 +8,7 @@ try {
 
 const num = (name: string, fallback: number) => {
   const raw = process.env[name];
-  const parsed = raw === undefined ? NaN : Number(raw);
+  const parsed = raw === undefined || raw.trim() === "" ? NaN : Number(raw);
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 
