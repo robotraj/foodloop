@@ -1,7 +1,7 @@
 import express, { type NextFunction, type Request, type Response } from "express";
 import os from "node:os";
 import { config } from "./config.js";
-import { db, newId, nowIso, save } from "./store.js";
+import { db, newId, nowIso, save, seedHostedDemoData } from "./store.js";
 import { distanceKm, AMSTERDAM_CENTER } from "./geo.js";
 import { subscribe, subscribePublic } from "./notify.js";
 import { cancel, HttpError, reserve } from "./reservations.js";
@@ -28,6 +28,7 @@ function getUser(id: string) {
   return user;
 }
 
+if (process.env.VERCEL === "1" || process.env.VERCEL === "true") seedHostedDemoData();
 // Optional protection for the agent/admin endpoints: set ADMIN_TOKEN and send it as x-admin-token.
 function admin(req: Request, _res: Response, next: NextFunction) {
   if (process.env.ADMIN_TOKEN && req.get("x-admin-token") !== process.env.ADMIN_TOKEN) {

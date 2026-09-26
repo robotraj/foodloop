@@ -14,7 +14,9 @@ const num = (name: string, fallback: number) => {
 
 export const config = {
   port: num("PORT", 3000),
-  dataFile: process.env.FOODLOOP_DATA_FILE ?? "data/db.json",
+  dataFile:
+    process.env.FOODLOOP_DATA_FILE ??
+    (process.env.VERCEL === "1" || process.env.VERCEL === "true" ? "/tmp/foodloop-db.json" : "data/db.json"),
 
   // Claude
   model: process.env.FOODLOOP_MODEL ?? "claude-opus-5",
