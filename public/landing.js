@@ -126,7 +126,13 @@ function getPosition() {
   return new Promise((resolve) => {
     if (!navigator.geolocation) return resolve(null);
     navigator.geolocation.getCurrentPosition(
-      (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
+      (p) => {
+        const position = { lat: p.coords.latitude, lng: p.coords.longitude };
+        const latDistance = (position.lat - cfg.center.lat) * 111;
+        const lngDistance = (position.lng - cfg.center.lng) * 111 * Math.cos((cfg.center.lat * Math.PI) / 180);
+        const outsideDemoArea = Math.hypot(latDistance, lngDistance) > 25;
+        resolve(cfg.offline && outsideDemoArea ? null : position);
+      },
       () => resolve(null),
       { timeout: 8000 },
     );
