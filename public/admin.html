@@ -52,6 +52,7 @@
       <div class="row">
         <label class="muted">How many <input id="outreachLimit" type="number" value="5" style="width:70px" /></label>
         <button id="outreach">Run outreach</button>
+        <button class="secondary" id="smartOutreach" title="Message the restaurants the forecast expects surplus from today">Contact likely surplus</button>
       </div>
       <p class="muted" id="outreachResult"></p>
     </section>
@@ -70,8 +71,43 @@
     </section>
 
     <section class="card">
+      <h2>Router · best action</h2>
+      <p class="muted">Every surplus item is routed to sell, donate, reuse, compost or biogas. Anything that looks unsafe never goes to people.</p>
+      <div id="actionTotals"></div>
+      <div id="dispositions"></div>
+    </section>
+
+    <section class="card">
       <h2>3 · Published listings</h2>
       <div id="listings"></div>
+    </section>
+
+    <section class="card">
+      <h2>Surplus forecast</h2>
+      <p class="muted">Expected surplus today from each restaurant's history: same weekday first, then all days. “Contact likely surplus” in Outreach uses this ranking.</p>
+      <div id="forecast"></div>
+    </section>
+
+    <section class="card">
+      <h2>Chef · recipes from leftovers</h2>
+      <p class="muted">Used automatically for food the router marks “reuse”. Try it yourself:</p>
+      <div class="row">
+        <input id="leftovers" style="flex:1" placeholder="e.g. day-old bread, 4 portions of rice, 2 kg potatoes" />
+        <button id="chef">Suggest recipes</button>
+      </div>
+      <p class="muted" id="chefResult"></p>
+      <div id="recipes"></div>
+    </section>
+
+    <section class="card">
+      <h2>Impact · closing the loop</h2>
+      <p class="muted">Food rescued for people, and inedible waste turned into compost and biogas. Compost goes to partner farms that grow food for restaurants again. Figures are rough estimates.</p>
+      <div class="stats" id="impactStats"></div>
+      <div class="row">
+        <button class="secondary" id="seedPartners">Add demo partners</button>
+        <span class="muted" id="partnerResult"></span>
+      </div>
+      <div id="partners"></div>
     </section>
   </main>
 

@@ -9,6 +9,9 @@ import { clearSimulatedData, simulatorStatus, startSimulator, stopSimulator } fr
 import { findRestaurants, seedDemoRestaurants } from "./agents/finder.js";
 import { handleReply, parseReplyOffline, runOutreach } from "./agents/outreach.js";
 import { expireListings } from "./agents/publisher.js";
+import { suggestRecipes } from "./agents/chef.js";
+import { forecastAll } from "./agents/forecast.js";
+import { impact, loopRestaurants, seedDemoPartners } from "./impact.js";
 
 const app = express();
 app.use(express.json());
@@ -52,7 +55,10 @@ app.get("/api/config", (_req, res) => {
 app.get("/api/stats", (_req, res) => {
   expireListings();
   const kept = db.reservations.filter((r) => r.status !== "cancelled");
+  const { rescuedKg, co2eAvoidedKg } = impact();
   res.json({
+    rescuedKg,
+    co2eAvoidedKg,
     restaurants: db.restaurants.filter((r) => r.status !== "opted_out").length,
     liveListings: db.listings.filter((l) => l.status === "active").length,
     portionsRescued: kept.reduce((s, r) => s + r.portions, 0),
@@ -110,9 +116,10 @@ app.get("/api/listings", (req, res) => {
   const lat = numberOr(req.query.lat, AMSTERDAM_CENTER.lat);
   const lng = numberOr(req.query.lng, AMSTERDAM_CENTER.lng);
   const radiusKm = numberOr(req.query.radiusKm, 25);
+  const loop = loopRestaurants();
   const listings = db.listings
     .filter((l) => l.status === "active")
-    .map((l) => ({ ...l, distanceKm: Math.round(distanceKm({ lat, lng }, l) * 10) / 10 }))
+    .map((l) => ({ ...l, closesLoop: loop.has(l.restaurantId), distanceKm: Math.round(distanceKm({ lat, lng }, l) * 10) / 10 }))
     .filter((l) => l.distanceKm <= radiusKm)
     .sort((a, b) => a.distanceKm - b.distanceKm);
   res.json(listings);
@@ -156,6 +163,8 @@ app.get("/api/admin/overview", admin, (_req, res) => {
       messages: db.messages.filter((m) => m.restaurantId === r.id),
     })),
     listings: [...db.listings].reverse(),
+    dispositions: db.dispositions.slice(-100).reverse(),
+    partners: db.partners,
     stats: {
       users: db.users.length,
       reservations: db.reservations.filter((r) => r.status !== "cancelled").length,
@@ -174,7 +183,36 @@ app.post("/api/agents/seed", admin, (_req, res) => {
 });
 
 app.post("/api/agents/outreach", admin, async (req, res) => {
-  res.json(await runOutreach({ limit: numberOr(req.body?.limit, 5) }));
+  res.json(await runOutreach({ limit: numberOr(req.body?.limit, 5), smart: req.body?.smart === true }));
+});
+
+app.get("/api/admin/forecast", admin, (_req, res) => {
+  res.json(forecastAll().slice(0, 25));
+});
+
+app.get("/api/admin/impact", admin, (_req, res) => {
+  res.json(impact());
+});
+
+app.post("/api/agents/partners/seed", admin, (_req, res) => {
+  const added = seedDemoPartners();
+  save();
+  res.json({ added });
+});
+
+// Chef agent: "bread, 3 rice, 2 kg potatoes" -> recipes. A leading number is read as portions.
+app.post("/api/agents/chef", admin, async (req, res) => {
+  const text = String(req.body?.text ?? "").slice(0, 300);
+  const items = text
+    .split(/[,\n]/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((s) => {
+      const m = s.match(/^(\d+)\s*(?:x|kg|portions?)?\s*(?:of\s+)?(.+)$/i);
+      return m ? { name: m[2], portions: Number(m[1]) } : { name: s, portions: 1 };
+    });
+  if (!items.length) throw new HttpError(400, "List some leftovers, e.g. \"day-old bread, 3 portions of rice\"");
+  res.json(await suggestRecipes(items));
 });
 
 app.post("/api/restaurants/:id/reply", admin, async (req, res) => {

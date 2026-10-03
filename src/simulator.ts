@@ -5,10 +5,11 @@ import { config, minimumDonation } from "./config.js";
 import { db, newId, nowIso, save, type Restaurant } from "./store.js";
 import { AMSTERDAM_CENTER, distanceKm } from "./geo.js";
 import { broadcast } from "./notify.js";
-import { contactRestaurant, handleReply } from "./agents/outreach.js";
+import { contactRestaurant, handleReply, type ReplyResult } from "./agents/outreach.js";
 import { expireListings } from "./agents/publisher.js";
 import { findRestaurants } from "./agents/finder.js";
 import { reserve } from "./reservations.js";
+import { seedDemoPartners } from "./impact.js";
 
 export interface Activity {
   at: string;
@@ -74,6 +75,14 @@ function composeReply(restaurant: Restaurant): { text: string; followUpAnswer?: 
 
   const dishes = [...dishesFor(restaurant)].sort(() => Math.random() - 0.5).slice(0, rand(1, 2));
   const [start, end] = pickupTimes();
+  // The rarer cases that exercise the router: a big batch, inedible waste, and food collected too late.
+  const extra = Math.random();
+  if (extra < 0.08) return { text: `Ja! A catering got cancelled, we have ${rand(22, 35)} portions of ${dishes[0]}, pickup ${start}-${end}` };
+  if (extra < 0.16) return { text: `We have ${rand(3, 6)} portions of ${dishes[0]} and ${rand(8, 30)} kg of vegetable peels, pickup ${start}-${end}` };
+  if (extra < 0.22) {
+    const now = new Date();
+    return { text: `Only ${rand(4, 9)} portions of day-old bread, pickup ${hhmm(now)}-${hhmm(new Date(now.getTime() + 10 * 60_000))}` };
+  }
   if (roll < 0.22) {
     return {
       text: pick(["Yes, we have some leftovers today", "Ja, we hebben wel wat over"]),
@@ -107,6 +116,17 @@ function ensureBots() {
   save();
 }
 
+/** One line for the activity feed: what the router decided. */
+function describe(result: ReplyResult): string {
+  const parts = (result.routing?.decisions ?? []).map((d) => {
+    const n = d.items.reduce((s, i) => s + i.portions, 0);
+    return d.action === "sell" && result.published
+      ? `${n} listed · ${result.published.notifiedUsers} user(s) alerted`
+      : `${n} → ${d.action}${d.recipes?.length ? ` (${d.recipes[0].title})` : ""}`;
+  });
+  return parts.join("; ");
+}
+
 async function restaurantEvent() {
   // Answer a follow-up question from last tick first.
   const [followUpId, answer] = state.pendingFollowUps.entries().next().value ?? [];
@@ -114,7 +134,7 @@ async function restaurantEvent() {
     state.pendingFollowUps.delete(followUpId);
     const r = db.restaurants.find((x) => x.id === followUpId)!;
     const result = await handleReply(r.id, answer, { demo: true });
-    log("restaurant", result.published ? `${r.name} answered: ${result.published.listing.totalPortions} portions now live` : `${r.name} answered the follow-up`);
+    log("restaurant", result.routing ? `${r.name} answered: ${describe(result)}` : `${r.name} answered the follow-up`);
     return;
   }
 
@@ -130,9 +150,9 @@ async function restaurantEvent() {
   await contactRestaurant(restaurant);
   const reply = composeReply(restaurant);
   const result = await handleReply(restaurant.id, reply.text, { demo: true });
-  if (result.published) {
-    const l = result.published.listing;
-    log("restaurant", `${restaurant.name} posted ${l.totalPortions} portions (${l.items.map((i) => i.name).join(", ")}) · ${result.published.notifiedUsers} user(s) alerted`);
+  if (result.routing) {
+    const items = result.report.items.map((i) => i.name).join(", ");
+    log("restaurant", `${restaurant.name} had ${items}: ${describe(result)}`);
   } else if (result.followUpSent && reply.followUpAnswer) {
     state.pendingFollowUps.set(restaurant.id, reply.followUpAnswer);
     log("restaurant", `${restaurant.name} replied vaguely; the agent asked how many portions`);
@@ -187,6 +207,7 @@ export async function startSimulator(opts: { intervalSec?: number; warmUp?: numb
     state.running = true;
     log("info", `Simulator started (${config.offline ? "offline rule-based agents" : `Claude ${config.model}`})`);
     ensureBots();
+    if (seedDemoPartners()) save();
     await ensureRestaurants();
     // Warm up so the app isn't empty on first load.
     for (let i = 0; i < (opts.warmUp ?? 5); i++) await tick();
@@ -220,6 +241,7 @@ export function clearSimulatedData() {
   db.listings = db.listings.filter((l) => !demoListings.has(l.id));
   db.reservations = db.reservations.filter((r) => !demoListings.has(r.listingId) && !bots.has(r.userId));
   db.notifications = db.notifications.filter((n) => !demoListings.has(n.listingId));
+  db.dispositions = db.dispositions.filter((d) => !d.demo);
   db.users = db.users.filter((u) => !u.bot);
   db.messages = [];
   for (const r of db.restaurants) if (r.status !== "opted_out") r.status = "new";

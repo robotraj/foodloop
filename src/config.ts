@@ -31,6 +31,18 @@ export const config = {
   packagingPerPortion: num("PACKAGING_PER_PORTION", 0.75),
   platformFee: num("PLATFORM_FEE", 0.5),
 
+  // Router: when surplus is donated, composted or sent to biogas instead of sold in the app
+  donateMinPortions: num("DONATE_MIN_PORTIONS", 20),
+  biogasMinPortions: num("BIOGAS_MIN_PORTIONS", 20),
+  minSellMinutes: num("MIN_SELL_MINUTES", 20),
+
+  // Impact estimates (rough): weight of a portion, CO2e avoided per kg of food rescued,
+  // compost made per kg composted, and biogas per kg digested.
+  kgPerPortion: num("KG_PER_PORTION", 0.4),
+  co2ePerKgRescued: num("CO2E_PER_KG_RESCUED", 2.5),
+  compostYield: num("COMPOST_YIELD", 0.3),
+  biogasM3PerKg: num("BIOGAS_M3_PER_KG", 0.12),
+
   // Notifications
   defaultRadiusKm: num("DEFAULT_RADIUS_KM", 2),
 

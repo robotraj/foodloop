@@ -109,6 +109,7 @@ function renderListings(listings) {
       return `
       <article class="card listing" data-id="${l.id}">
         ${l.demo ? `<span class="pill test" title="Real restaurant, simulated surplus for testing">Test data</span>` : ""}
+        ${l.closesLoop ? `<span class="pill loop" title="This restaurant composts or digests its inedible food waste with a FoodLoop partner">Closes the loop</span>` : ""}
         <h3>${esc(l.title)}</h3>
         <div class="muted">${esc(l.restaurantName)} · ${l.distanceKm} km</div>
         <p>${esc(l.description)}</p>

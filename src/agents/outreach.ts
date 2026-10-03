@@ -8,6 +8,8 @@ import { db, newId, nowIso, save, type Restaurant } from "../store.js";
 import type { OutreachChannel } from "../channels/channel.js";
 import { simulatedInbox } from "../channels/simulatedInbox.js";
 import { publishListing, type PublishResult } from "./publisher.js";
+import { forecastTargets } from "./forecast.js";
+import { recordDispositions, routeSurplus, routingMessage, type Routing } from "./router.js";
 
 const SurplusReport = z.object({
   has_surplus: z.boolean().describe("True if the restaurant says it has food to give away now or later today."),
@@ -73,10 +75,11 @@ export async function contactRestaurant(restaurant: Restaurant, channel: Outreac
   return message;
 }
 
-/** Contact up to `limit` restaurants that haven't been contacted yet. */
-export async function runOutreach(opts: { limit?: number; channel?: OutreachChannel } = {}) {
+/** Contact up to `limit` restaurants: new ones, or with `smart` the ones the forecast expects surplus from today. */
+export async function runOutreach(opts: { limit?: number; channel?: OutreachChannel; smart?: boolean } = {}) {
   const channel = opts.channel ?? simulatedInbox;
-  const targets = db.restaurants.filter((r) => r.status === "new").slice(0, opts.limit ?? 5);
+  const limit = opts.limit ?? 5;
+  const targets = opts.smart ? forecastTargets(limit) : db.restaurants.filter((r) => r.status === "new").slice(0, limit);
   const contacted: { restaurant: string; message: string }[] = [];
   for (const restaurant of targets) {
     contacted.push({ restaurant: restaurant.name, message: await contactRestaurant(restaurant, channel) });
@@ -130,7 +133,7 @@ export function parseReplyOffline(text: string): SurplusReport {
   };
   if (report.wants_to_stop) return report;
 
-  for (const m of text.matchAll(/(\d+)\s*(?:x\s*)?(?:portions?|porties?|servings?|pieces?|stuks?)?\s*(?:of|van)?\s*([a-zA-Z][a-zA-Z '-]*?)(?=\s*(?:,|\.|;|\band\b|\ben\b|\bpickup\b|\bophalen\b|\bleft\b|\btoday\b|\bvandaag\b|$))/gi)) {
+  for (const m of text.matchAll(/(\d+)\s*(?:x\s*)?(?:portions?|porties?|servings?|pieces?|stuks?|kg|kilos?)?\s*(?:of|van)?\s*([a-zA-Z][a-zA-Z '-]*?)(?=\s*(?:,|\.|;|\band\b|\ben\b|\bpickup\b|\bophalen\b|\bleft\b|\btoday\b|\bvandaag\b|$))/gi)) {
     const name = m[2].trim();
     if (name && !/^(pm|am|uur|h)$/i.test(name)) report.items.push({ name, portions: Number(m[1]) });
   }
@@ -153,10 +156,11 @@ export function parseReplyOffline(text: string): SurplusReport {
 export interface ReplyResult {
   report: SurplusReport;
   followUpSent?: string;
+  routing?: Routing;
   published?: PublishResult;
 }
 
-/** Store a restaurant's reply, extract the surplus report, and hand it to the publisher. */
+/** Store a restaurant's reply, extract the surplus report, route each item, and publish what should be sold. */
 export async function handleReply(
   restaurantId: string,
   text: string,
@@ -183,8 +187,12 @@ export async function handleReply(
     record(restaurant.id, "outbound", report.follow_up_question);
     result.followUpSent = report.follow_up_question;
   } else if (report.has_surplus && report.items.some((i) => i.portions > 0)) {
-    result.published = await publishListing(restaurant, report, { demo: opts.demo });
-    const thanks = `Thank you! Your surplus is now live on FoodLoop (${result.published.listing.totalPortions} portions). Pickup codes will be shown to you at collection.`;
+    const routing = await routeSurplus(restaurant, report, text);
+    result.routing = routing;
+    const sell = routing.decisions.find((d) => d.action === "sell");
+    if (sell) result.published = await publishListing(restaurant, { ...report, items: sell.items }, { demo: opts.demo });
+    recordDispositions(restaurant, routing, { listingId: result.published?.listing.id, demo: opts.demo });
+    const thanks = routingMessage(routing);
     await channel.send(restaurant, thanks);
     record(restaurant.id, "outbound", thanks);
   }

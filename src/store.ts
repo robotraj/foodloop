@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { config } from "./config.js";
+import type { Recipe } from "./agents/chef.js";
 
 export interface Restaurant {
   id: string;
@@ -76,6 +77,42 @@ export interface Reservation {
   createdAt: string;
 }
 
+export type DispositionAction = "sell" | "donate" | "reuse" | "compost" | "biogas";
+
+/** Where a batch of surplus went, as decided by the router agent. */
+export interface Disposition {
+  id: string;
+  restaurantId: string;
+  restaurantName: string;
+  action: DispositionAction;
+  items: FoodItem[];
+  portions: number;
+  reason: string;
+  decidedBy: "claude" | "rules";
+  /** The app listing, when the action is "sell". */
+  listingId?: string;
+  /** Food bank, composter or biogas plant that collects it. */
+  partnerId?: string;
+  /** Chef agent's ideas, when the action is "reuse". */
+  recipes?: Recipe[];
+  demo?: boolean;
+  createdAt: string;
+}
+
+/** Organisations that close the loop: food banks take donations, composters and biogas plants take
+ * inedible food, and farms grow new produce with the compost. */
+export interface Partner {
+  id: string;
+  name: string;
+  kind: "food_bank" | "composter" | "biogas" | "farm";
+  lat: number;
+  lng: number;
+  address: string;
+  /** Fictional partner for demos. */
+  demo?: boolean;
+  createdAt: string;
+}
+
 export interface Notification {
   id: string;
   userId: string;
@@ -91,6 +128,8 @@ interface Data {
   users: User[];
   reservations: Reservation[];
   notifications: Notification[];
+  dispositions: Disposition[];
+  partners: Partner[];
 }
 
 const empty = (): Data => ({
@@ -100,6 +139,8 @@ const empty = (): Data => ({
   users: [],
   reservations: [],
   notifications: [],
+  dispositions: [],
+  partners: [],
 });
 
 function load(): Data {

@@ -1,12 +1,17 @@
 # FoodLoop
 
-Rescue surplus restaurant food in Amsterdam. Three agents work together:
+Rescue surplus restaurant food in Amsterdam. Six agents work together:
 
 | # | Agent | File | What it does |
 |---|-------|------|--------------|
 | 1 | **Restaurant Finder** | `src/agents/finder.ts` | Pulls restaurants, cafés and takeaways inside Amsterdam from OpenStreetMap (Overpass API, no key needed). |
 | 2 | **Outreach** | `src/agents/outreach.ts` | Messages restaurants asking about today's surplus (Claude drafts the message), then reads their free-text replies (Dutch or English) and extracts a structured report: items, portions, dietary tags, pickup window. Asks a follow-up if the quantity is missing and respects STOP. |
 | 3 | **Publisher & Notifier** | `src/agents/publisher.ts` | Writes the listing (Claude writes the copy), applies the fair-share limits, publishes it in the app and instantly alerts every user whose radius covers the restaurant. |
+| 4 | **Router** | `src/agents/router.ts` | Decides the best action for every surplus item: **sell** in the app, **donate** to a food bank (big batches), **reuse** in tomorrow's menu (ingredients with too little time left), **compost**, or **biogas** (large inedible volumes). Rules act as a safety floor: anything that looks spoiled never goes to people, whatever Claude says. |
+| 5 | **Chef** | `src/agents/chef.ts` | Turns leftovers into 1-2 recipes. Runs automatically for food routed to "reuse", and from the agent console. |
+| 6 | **Forecast** | `src/agents/forecast.ts` | Predicts today's surplus per restaurant from its history (same weekday first). **Contact likely surplus** in the console messages those restaurants first. |
+
+`src/impact.ts` closes the loop: it tracks kg rescued, CO₂e avoided, compost and biogas made, and compost delivered to partner farms (food banks, composters, biogas plants, farms). The estimates are configurable in `.env`. Listings from restaurants that compost with a partner get a **Closes the loop** badge. Add fictional demo partners from the console, or let the simulator add them.
 
 ```
 OpenStreetMap ──► Finder ──► restaurants ──► Outreach ──► restaurant reply
