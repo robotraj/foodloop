@@ -8,6 +8,8 @@ import type { Recipe } from "./agents/chef.js";
 export interface Restaurant {
   id: string;
   osmId?: string;
+  /** Google Places place_id: kept permanently, the other fields are refreshed on every finder run. */
+  placeId?: string;
   name: string;
   lat: number;
   lng: number;
@@ -16,6 +18,8 @@ export interface Restaurant {
   website?: string;
   email?: string;
   cuisine?: string;
+  /** From Google Places, e.g. "Monday: 12:00 – 22:00". */
+  openingHours?: string[];
   status: "new" | "contacted" | "replied" | "opted_out";
   lastContactedAt?: string;
 }

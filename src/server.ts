@@ -51,6 +51,8 @@ app.get("/api/config", (_req, res) => {
     basePricePerPortion: config.basePricePerPortion,
     defaultRadiusKm: config.defaultRadiusKm,
     center: AMSTERDAM_CENTER,
+    googleMapsApiKey: config.googleMapsApiKey ?? null,
+    googleMapsMapId: config.googleMapsMapId,
   });
 });
 
@@ -141,6 +143,8 @@ app.get("/api/restaurants/nearby", (req, res) => {
       website: restaurant.website,
       email: restaurant.email,
       cuisine: restaurant.cuisine,
+      placeId: restaurant.placeId,
+      openingHours: restaurant.openingHours,
       lat: restaurant.lat,
       lng: restaurant.lng,
       distanceKm: Math.round(distanceKm({ lat, lng }, restaurant) * 10) / 10,
@@ -201,7 +205,8 @@ app.get("/api/admin/overview", admin, (_req, res) => {
 });
 
 app.post("/api/agents/finder", admin, async (req, res) => {
-  res.json(await findRestaurants({ limit: req.body?.limit ? numberOr(req.body.limit, 0) : undefined }));
+  const source = req.body?.source === "google" || req.body?.source === "osm" ? req.body.source : undefined;
+  res.json(await findRestaurants({ limit: req.body?.limit ? numberOr(req.body.limit, 0) : undefined, source }));
 });
 
 app.post("/api/agents/seed", admin, (_req, res) => {

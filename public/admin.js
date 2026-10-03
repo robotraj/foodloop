@@ -123,8 +123,13 @@ $("restaurant").addEventListener("change", renderThread);
 
 $("find").addEventListener("click", (e) =>
   busy(e.target, $("findResult"), async () => {
-    const r = await api("/api/agents/finder", { method: "POST", body: { limit: Number($("findLimit").value) || undefined } });
-    return `Checked ${r.found} places from OpenStreetMap, added ${r.added} new restaurants.`;
+    const r = await api("/api/agents/finder", {
+      method: "POST",
+      body: { limit: Number($("findLimit").value) || undefined, source: $("findSource").value || undefined },
+    });
+    return r.source === "google"
+      ? `Checked ${r.found} places from Google Places (${r.requests} API requests), added ${r.added} new restaurants.`
+      : `Checked ${r.found} places from OpenStreetMap, added ${r.added} new restaurants.`;
   }),
 );
 

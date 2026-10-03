@@ -4,7 +4,7 @@ Rescue surplus restaurant food in Amsterdam. Six agents work together:
 
 | # | Agent | File | What it does |
 |---|-------|------|--------------|
-| 1 | **Restaurant Finder** | `src/agents/finder.ts` | Pulls restaurants, cafés and takeaways inside Amsterdam from OpenStreetMap (Overpass API, no key needed). |
+| 1 | **Restaurant Finder** | `src/agents/finder.ts` | Pulls restaurants, cafés and takeaways inside Amsterdam from **Google Places** when `GOOGLE_PLACES_API_KEY` is set, otherwise from OpenStreetMap (Overpass API, no key needed). See [Google Maps](#google-maps). |
 | 2 | **Outreach** | `src/agents/outreach.ts` | Messages restaurants asking about today's surplus (Claude drafts the message), then reads their free-text replies (Dutch or English) and extracts a structured report: items, portions, dietary tags, pickup window. Asks a follow-up if the quantity is missing and respects STOP. |
 | 3 | **Publisher & Notifier** | `src/agents/publisher.ts` | Writes the listing (Claude writes the copy), applies the fair-share limits, publishes it in the app and instantly alerts every user whose radius covers the restaurant. |
 | 4 | **Router** | `src/agents/router.ts` | Decides the best action for every surplus item: **sell** in the app, **donate** to a food bank (big batches), **reuse** in tomorrow's menu (ingredients with too little time left), **compost**, or **biogas** (large inedible volumes). Rules act as a safety floor: anything that looks spoiled never goes to people, whatever Claude says. |
@@ -14,7 +14,7 @@ Rescue surplus restaurant food in Amsterdam. Six agents work together:
 `src/impact.ts` closes the loop: it tracks kg rescued, CO₂e avoided, compost and biogas made, and compost delivered to partner farms (food banks, composters, biogas plants, farms). The estimates are configurable in `.env`. Listings from restaurants that compost with a partner get a **Closes the loop** badge. Add fictional demo partners from the console, or let the simulator add them.
 
 ```
-OpenStreetMap ──► Finder ──► restaurants ──► Outreach ──► restaurant reply
+Google Places / OSM ──► Finder ──► restaurants ──► Outreach ──► restaurant reply
                                                               │  (Claude extracts surplus)
 users nearby ◄── live alert ◄── Publisher ◄── surplus report ◄┘
      │
@@ -43,8 +43,22 @@ npm start
 
 Without an API key, FoodLoop runs in **offline mode**. Outreach and reply parsing then use simple rules (for example, "8 portions of lasagne, pickup 21:00-22:00"), so you can try the whole flow for free.
 
+### Google Maps
+
+Both keys are optional and can be the same key while testing locally.
+
+| Variable | Google API to enable | Used for |
+|---|---|---|
+| `GOOGLE_PLACES_API_KEY` | Places API (New) | The finder searches Amsterdam with Nearby Search on a ~1 km grid. Cells with a full page of results are split into 4 and searched again. It keeps only operational places with an Amsterdam address and de-duplicates by `place_id`. It also merges places already found via OpenStreetMap (same name, within 100 m) so nobody is contacted twice. It stores phone, website, cuisine and opening hours. |
+| `GOOGLE_MAPS_API_KEY` | Maps JavaScript API | Shows a map in the user app: you, your alert radius, food available (green pins) and restaurants (grey dots). Click a pin for details, directions or to jump to the listing. This key is sent to browsers, so restrict it by HTTP referrer. |
+
+- **Cost:** Places Nearby Search is billed per request. A limited run (`npm run find -- 50`, or **Limit** in the console) searches the centre first and stops at the limit. A full-city run takes a few hundred requests. The console and CLI report how many requests were made. The live simulator always uses free OSM data.
+- **Pick a source:** use the **Source** menu in the console, or run `npm run find -- 200 osm` / `npm run find -- 200 google`.
+- **Without keys:** every listing and restaurant card still has **Open in Google Maps** and **Directions** links. These need no key.
+- **Google's terms:** only the official API is used. `place_id` is kept permanently, and the other fields are refreshed on each finder run.
+
 ### Demo flow
-1. In the agent console, click **Find restaurants** (real OSM data) or **Add 5 demo restaurants**.
+1. In the agent console, click **Find restaurants** (Google Places or real OSM data) or **Add 5 demo restaurants**.
 2. In another tab, open the user app (`/app.html`) and join. Allow location, or it falls back to central Amsterdam.
 3. Back in the console, click **Run outreach**, pick a restaurant and send a reply as the restaurant, e.g.
    *"Ja! We have 8 portions of vegetarian lasagne and 5 croissants, pickup 21:00-22:00"*.

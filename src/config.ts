@@ -47,8 +47,17 @@ export const config = {
   // Notifications
   defaultRadiusKm: num("DEFAULT_RADIUS_KM", 2),
 
-  // Restaurant finder (OpenStreetMap Overpass API)
+  // Restaurant finder: Google Places API (New) when a key is set, otherwise OpenStreetMap (Overpass API)
+  googlePlacesApiKey: process.env.GOOGLE_PLACES_API_KEY?.trim() || undefined,
+  googlePlacesTypes: (process.env.GOOGLE_PLACES_TYPES?.trim() || "restaurant,cafe,meal_takeaway")
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean),
   overpassUrl: process.env.OVERPASS_URL ?? "https://overpass-api.de/api/interpreter",
+
+  // Map in the user app (Maps JavaScript API). This key is sent to browsers: restrict it by HTTP referrer.
+  googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY?.trim() || undefined,
+  googleMapsMapId: process.env.GOOGLE_MAPS_MAP_ID?.trim() || "DEMO_MAP_ID",
 };
 
 export function basePrice(portions: number): number {

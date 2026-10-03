@@ -11,6 +11,30 @@ const safeWebsite = (value) => {
   }
 };
 
+// Google Maps links work without an API key.
+function mapsSearchUrl({ name, address, lat, lng, placeId }) {
+  const url = new URL("https://www.google.com/maps/search/");
+  url.searchParams.set("api", "1");
+  url.searchParams.set("query", name ? [name, address].filter(Boolean).join(", ") : `${lat},${lng}`);
+  if (placeId) url.searchParams.set("query_place_id", placeId);
+  return url.href;
+}
+function directionsUrl({ lat, lng, placeId }) {
+  const url = new URL("https://www.google.com/maps/dir/");
+  url.searchParams.set("api", "1");
+  url.searchParams.set("destination", `${lat},${lng}`);
+  if (placeId) url.searchParams.set("destination_place_id", placeId);
+  url.searchParams.set("travelmode", "walking");
+  return url.href;
+}
+const mapsLinks = (place) => `<div class="maps-links">
+  <a href="${esc(mapsSearchUrl(place))}" target="_blank" rel="noreferrer">Open in Google Maps</a>
+  <a href="${esc(directionsUrl(place))}" target="_blank" rel="noreferrer">Directions</a>
+</div>`;
+
+// Google weekday descriptions start on Monday.
+const todaysHours = (hours) => hours?.[(new Date().getDay() + 6) % 7];
+
 let cfg;
 let user;
 let events;
@@ -56,6 +80,7 @@ function getPosition() {
 function showApp() {
   $("signup").classList.add("hidden");
   ["settings", "feed", "restaurantsSection", "mine"].forEach((id) => $(id).classList.remove("hidden"));
+  $("mapSection").classList.toggle("hidden", !cfg.googleMapsApiKey);
   $("whoami").textContent = `Hi ${user.name}`;
   $("radius2").value = String(user.radiusKm);
   $("locationLabel").textContent = `Location ${user.lat.toFixed(3)}, ${user.lng.toFixed(3)} · alerts within ${user.radiusKm} km`;
@@ -102,6 +127,140 @@ async function refresh() {
   renderListings(listings);
   renderRestaurants(restaurants);
   renderReservations(reservations);
+  renderMap(listings, restaurants);
+}
+
+// ---------- Google Map (only when GOOGLE_MAPS_API_KEY is set) ----------
+let map;
+let infoWindow;
+let radiusCircle;
+let mapMarkers = [];
+let mapViewKey;
+
+function loadGoogleMaps() {
+  loadGoogleMaps.promise ??= new Promise((resolve, reject) => {
+    window.foodloopMapsReady = resolve;
+    // Called by Google when the key is invalid, restricted or the API isn't enabled.
+    window.gm_authFailure = () => showMapError("Google Maps rejected the API key. Check that the Maps JavaScript API is enabled and the key allows this site.");
+    const script = document.createElement("script");
+    script.src =
+      `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(cfg.googleMapsApiKey)}` +
+      "&v=weekly&loading=async&callback=foodloopMapsReady";
+    script.async = true;
+    script.onerror = () => reject(new Error("Google Maps failed to load. Check your connection."));
+    document.head.append(script);
+  });
+  return loadGoogleMaps.promise;
+}
+
+function showMapError(text) {
+  $("mapError").textContent = text;
+}
+
+function dot(kind) {
+  const el = document.createElement("div");
+  el.className = `map-dot ${kind}`;
+  return el;
+}
+
+async function renderMap(listings, restaurants) {
+  if (!cfg.googleMapsApiKey) return;
+  try {
+    await loadGoogleMaps();
+    const { Map, InfoWindow, Circle } = await google.maps.importLibrary("maps");
+    const { AdvancedMarkerElement, PinElement } = await google.maps.importLibrary("marker");
+    const here = { lat: user.lat, lng: user.lng };
+
+    if (!map) {
+      map = new Map($("map"), {
+        center: here,
+        zoom: 14,
+        mapId: cfg.googleMapsMapId,
+        colorScheme: "DARK",
+        streetViewControl: false,
+        mapTypeControl: false,
+        fullscreenControl: true,
+      });
+      infoWindow = new InfoWindow();
+      radiusCircle = new Circle({
+        map,
+        strokeColor: "#4c8dff",
+        strokeOpacity: 0.7,
+        strokeWeight: 1,
+        fillColor: "#4c8dff",
+        fillOpacity: 0.08,
+        clickable: false,
+      });
+      // "Go to listing" links inside info windows.
+      $("map").addEventListener("click", (e) => {
+        const id = e.target.closest?.("[data-goto]")?.dataset.goto;
+        const card = id && $("listings").querySelector(`.listing[data-id="${CSS.escape(id)}"]`);
+        if (!card) return;
+        card.scrollIntoView({ behavior: "smooth", block: "center" });
+        card.classList.remove("flash");
+        void card.offsetWidth;
+        card.classList.add("flash");
+      });
+    }
+
+    // Re-centre only when the user's location or radius changes, not on every live refresh.
+    radiusCircle.setCenter(here);
+    radiusCircle.setRadius(user.radiusKm * 1000);
+    const viewKey = `${user.lat},${user.lng},${user.radiusKm}`;
+    if (viewKey !== mapViewKey) {
+      mapViewKey = viewKey;
+      map.fitBounds(radiusCircle.getBounds());
+    }
+
+    for (const marker of mapMarkers) marker.map = null;
+    mapMarkers = [];
+    const add = (options, html) => {
+      const marker = new AdvancedMarkerElement({ map, gmpClickable: Boolean(html), ...options });
+      if (html) {
+        marker.addEventListener("gmp-click", () => {
+          infoWindow.setContent(html);
+          infoWindow.open({ map, anchor: marker });
+        });
+      }
+      mapMarkers.push(marker);
+    };
+
+    add({ position: here, content: dot("you"), title: "You", zIndex: 1000 });
+
+    for (const r of restaurants) {
+      const hours = todaysHours(r.openingHours);
+      add(
+        { position: { lat: r.lat, lng: r.lng }, content: dot("place"), title: r.name },
+        `<div class="map-info">
+          <h3>${esc(r.name)}</h3>
+          <div class="info-muted">${esc(r.cuisine || "Restaurant")} · ${r.distanceKm} km</div>
+          <div>${esc(r.address || "")}</div>
+          ${hours ? `<div class="info-muted">${esc(hours)}</div>` : ""}
+          ${mapsLinks(r)}
+        </div>`,
+      );
+    }
+
+    for (const l of listings) {
+      const pin = new PinElement({ background: "#7fd89b", borderColor: "#2f6b44", glyphColor: "#0c1a10", scale: 1.15 });
+      add(
+        { position: { lat: l.lat, lng: l.lng }, content: pin.element, title: `${l.title} · ${l.restaurantName}`, zIndex: 500 },
+        `<div class="map-info">
+          <h3>${esc(l.title)}</h3>
+          <div class="info-muted">${esc(l.restaurantName)} · ${l.distanceKm} km</div>
+          <div>${l.remainingPortions} of ${l.totalPortions} portions left</div>
+          <div>Pickup ${time(l.pickupStart)}–${time(l.pickupEnd)}</div>
+          <div class="maps-links">
+            <button class="link" data-goto="${esc(l.id)}">Reserve</button>
+            <a href="${esc(directionsUrl(l))}" target="_blank" rel="noreferrer">Directions</a>
+          </div>
+        </div>`,
+      );
+    }
+    showMapError("");
+  } catch (err) {
+    showMapError(err.message);
+  }
 }
 
 let seenListings = null;
@@ -133,6 +292,7 @@ function renderListings(listings) {
              ${l.dietary.map((d) => `<span class="pill">${esc(d)}</span>`).join("")}</div>
         <div class="meta">Pickup ${time(l.pickupStart)}–${time(l.pickupEnd)} · ${esc(l.address || "")}<br>
           ${l.remainingPortions} of ${l.totalPortions} portions left · max ${l.maxPerUser} per person</div>
+        ${mapsLinks({ name: l.restaurantName, address: l.address, lat: l.lat, lng: l.lng })}
         <div class="row">
           <label class="muted">Portions <select class="portions">${options}</select></label>
           <label class="muted">Tip € <input class="tip" type="number" min="0" step="0.5" style="width:80px" value="0.00" /></label>
@@ -162,13 +322,16 @@ function renderRestaurants(restaurants) {
   $("restaurants").innerHTML = restaurants
     .map((restaurant) => {
       const website = safeWebsite(restaurant.website);
+      const hours = todaysHours(restaurant.openingHours);
       return `<article class="card">
         <h3>${esc(restaurant.name)}</h3>
         <div class="muted">${restaurant.distanceKm} km · ${esc(restaurant.cuisine || "Restaurant")}</div>
         <p class="meta">${esc(restaurant.address || "Address unavailable")}</p>
+        ${hours ? `<div class="muted">${esc(hours)}</div>` : ""}
         ${restaurant.phone ? `<div><a href="tel:${encodeURIComponent(restaurant.phone)}">${esc(restaurant.phone)}</a></div>` : ""}
         ${restaurant.email ? `<div><a href="mailto:${encodeURIComponent(restaurant.email)}">${esc(restaurant.email)}</a></div>` : ""}
         ${website ? `<div><a href="${esc(website)}" target="_blank" rel="noreferrer">Website</a></div>` : ""}
+        ${mapsLinks(restaurant)}
       </article>`;
     })
     .join("");

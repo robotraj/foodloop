@@ -37,8 +37,15 @@
 
     <section class="card">
       <h2>1 · Restaurant finder</h2>
-      <p class="muted">Pulls restaurants, cafés and takeaways in Amsterdam from OpenStreetMap.</p>
+      <p class="muted">Pulls restaurants, cafés and takeaways in Amsterdam from Google Places (when <code>GOOGLE_PLACES_API_KEY</code> is set) or OpenStreetMap. Google is billed per request: a limited run searches the centre first.</p>
       <div class="row">
+        <label class="muted">Source
+          <select id="findSource">
+            <option value="">Auto</option>
+            <option value="google">Google Places</option>
+            <option value="osm">OpenStreetMap</option>
+          </select>
+        </label>
         <label class="muted">Limit <input id="findLimit" type="number" value="50" style="width:90px" /></label>
         <button id="find">Find restaurants</button>
         <button class="secondary" id="seed">Add 5 fictional restaurants</button>

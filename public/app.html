@@ -44,6 +44,15 @@
       <p class="muted" id="limits"></p>
     </section>
 
+    <section class="card hidden" id="mapSection">
+      <div class="row map-head">
+        <h2>Map</h2>
+        <span class="muted"><span class="map-key you"></span>You <span class="map-key food"></span>Food available <span class="map-key place"></span>Restaurant</span>
+      </div>
+      <div id="map" role="region" aria-label="Map of food and restaurants near you"></div>
+      <p class="error" id="mapError"></p>
+    </section>
+
     <section class="hidden" id="feed">
       <h2 style="margin:0 0 8px">Available near you</h2>
       <div class="grid" id="listings"></div>

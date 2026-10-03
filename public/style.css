@@ -81,6 +81,25 @@ td, th { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line
 .live.on { color: var(--brand); }
 .live.on::before { background: #e5484d; animation: live-pulse 1.6s infinite; }
 @keyframes live-pulse { 50% { opacity: 0.35; } }
+/* Google Map in the user app */
+#map { height: 380px; border-radius: 10px; overflow: hidden; background: var(--accent); }
+@media (max-width: 600px) { #map { height: 300px; } }
+.map-head { justify-content: space-between; margin-bottom: 8px; }
+.map-head h2 { margin: 0; }
+.map-key { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin: 0 4px 0 10px; vertical-align: -1px; }
+.map-key.you, .map-dot.you { background: #4c8dff; }
+.map-key.food { background: var(--brand); }
+.map-key.place, .map-dot.place { background: #c9d2ca; }
+.map-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid #121814; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); }
+.map-dot.you { width: 16px; height: 16px; border-color: #fff; }
+.map-info { color: #1b1f1c; font-size: 13px; line-height: 1.45; max-width: 240px; }
+.map-info h3 { margin: 0 0 2px; font-size: 14px; }
+.map-info .info-muted { color: #5b655d; }
+.map-info a, .map-info button.link { color: #1a6b3a; font-weight: 600; }
+button.link { background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
+.maps-links { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 6px; font-size: 13px; }
+.maps-links a { color: var(--brand); }
+.map-info .maps-links a { color: #1a6b3a; }
 .listing.flash { animation: flash 1.2s ease-out; }
 @keyframes flash { from { box-shadow: 0 0 0 3px var(--brand); } to { box-shadow: 0 0 0 0 transparent; } }
 .feed { list-style: none; margin: 0; padding: 0; max-height: 280px; overflow: auto; font-size: 14px; }

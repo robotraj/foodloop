@@ -142,7 +142,7 @@ async function restaurantEvent() {
   if (active >= state.maxActiveListings) return;
 
   const withLiveListing = new Set(db.listings.filter((l) => l.status === "active").map((l) => l.restaurantId));
-  const candidates = db.restaurants.filter((r) => r.osmId && r.status !== "opted_out" && !withLiveListing.has(r.id) && !state.pendingFollowUps.has(r.id));
+  const candidates = db.restaurants.filter((r) => (r.osmId || r.placeId) && r.status !== "opted_out" && !withLiveListing.has(r.id) && !state.pendingFollowUps.has(r.id));
   const fresh = candidates.filter((r) => r.status === "new");
   const restaurant = pick(fresh.length ? fresh : candidates);
   if (!restaurant) return;
@@ -193,9 +193,10 @@ async function tick() {
 }
 
 async function ensureRestaurants() {
-  if (db.restaurants.filter((r) => r.osmId).length >= 100) return;
+  if (db.restaurants.filter((r) => r.osmId || r.placeId).length >= 100) return;
   log("info", "Fetching real Amsterdam restaurants from OpenStreetMap…");
-  const { added } = await findRestaurants({ limit: 800 });
+  // Always OSM here: it's free, while 800 places from Google would be hundreds of billed requests.
+  const { added } = await findRestaurants({ limit: 800, source: "osm" });
   log("info", `Added ${added} restaurants from OpenStreetMap`);
 }
 
