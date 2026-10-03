@@ -54,6 +54,8 @@ export const config = {
     .map((t) => t.trim())
     .filter(Boolean),
   overpassUrl: process.env.OVERPASS_URL ?? "https://overpass-api.de/api/interpreter",
+  // Real restaurants saved with `npm run snapshot`; the hosted app starts with these.
+  restaurantSnapshotFile: process.env.RESTAURANT_SNAPSHOT_FILE ?? "seed/amsterdam-restaurants.json",
 
   // Map in the user app (Maps JavaScript API). This key is sent to browsers: restrict it by HTTP referrer.
   googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY?.trim() || undefined,

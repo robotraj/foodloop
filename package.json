@@ -8,6 +8,7 @@
     "live": "tsx src/server.ts --simulate",
     "typecheck": "tsc --noEmit",
     "find": "tsx src/cli.ts find",
+    "snapshot": "tsx src/cli.ts snapshot",
     "seed": "tsx src/cli.ts seed",
     "outreach": "tsx src/cli.ts outreach"
   },

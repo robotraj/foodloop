@@ -178,8 +178,20 @@ export function save(): void {
 export const newId = () => crypto.randomUUID();
 export const nowIso = () => new Date().toISOString();
 
+/** Real Amsterdam restaurants from the OpenStreetMap snapshot in the repo (see `npm run snapshot`). */
+function loadRestaurantSnapshot(): Restaurant[] {
+  try {
+    const rows = JSON.parse(fs.readFileSync(path.resolve(config.restaurantSnapshotFile), "utf8")) as Omit<Restaurant, "id" | "status">[];
+    return rows.map((row) => ({ ...row, id: newId(), status: "new" }));
+  } catch (err) {
+    console.error(`Could not load restaurant snapshot ${config.restaurantSnapshotFile}:`, err);
+    return [];
+  }
+}
+
 export function seedHostedDemoData(): void {
   if (db.restaurants.length > 0 || db.listings.length > 0) return;
+  db.restaurants.push(...loadRestaurantSnapshot());
 
   const createdAt = nowIso();
   const pickupStart = new Date(Date.now() + 30 * 60_000).toISOString();

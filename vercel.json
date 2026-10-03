@@ -3,7 +3,8 @@
   "installCommand": "npm install --omit=dev --ignore-scripts",
   "functions": {
     "api/index.ts": {
-      "maxDuration": 60
+      "maxDuration": 60,
+      "includeFiles": "seed/**"
     }
   },
   "rewrites": [{ "source": "/api/:path*", "destination": "/api" }]

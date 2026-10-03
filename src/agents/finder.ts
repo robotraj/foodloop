@@ -66,29 +66,39 @@ export async function findRestaurants(opts: { limit?: number; source?: FinderSou
   return { source, ...(await findOsm(opts)) };
 }
 
-async function findOsm(opts: { limit?: number }): Promise<{ found: number; added: number }> {
-  const elements = await overpass(query(opts.limit));
-  const byOsmId = new Map(db.restaurants.filter((r) => r.osmId).map((r) => [r.osmId!, r]));
-  let added = 0;
+export type RestaurantFields = Omit<Restaurant, "id" | "status" | "lastContactedAt">;
 
-  for (const el of elements) {
+/** Named restaurants, cafés and takeaways in Amsterdam from OpenStreetMap. */
+export async function fetchOsmRestaurants(limit?: number): Promise<RestaurantFields[]> {
+  const elements = await overpass(query(limit));
+  return elements.flatMap((el) => {
     const tags = el.tags ?? {};
     const lat = el.lat ?? el.center?.lat;
     const lng = el.lon ?? el.center?.lon;
-    if (!tags.name || lat === undefined || lng === undefined) continue;
+    if (!tags.name || lat === undefined || lng === undefined) return [];
+    return [
+      {
+        osmId: `${el.type}/${el.id}`,
+        name: tags.name,
+        lat,
+        lng,
+        address: toAddress(tags),
+        phone: tags.phone ?? tags["contact:phone"],
+        website: tags.website ?? tags["contact:website"],
+        email: tags.email ?? tags["contact:email"],
+        cuisine: tags.cuisine,
+      },
+    ];
+  });
+}
 
-    const osmId = `${el.type}/${el.id}`;
-    const fields = {
-      osmId,
-      name: tags.name,
-      lat,
-      lng,
-      address: toAddress(tags),
-      phone: tags.phone ?? tags["contact:phone"],
-      website: tags.website ?? tags["contact:website"],
-      email: tags.email ?? tags["contact:email"],
-      cuisine: tags.cuisine,
-    };
+async function findOsm(opts: { limit?: number }): Promise<{ found: number; added: number }> {
+  const found = await fetchOsmRestaurants(opts.limit);
+  const byOsmId = new Map(db.restaurants.filter((r) => r.osmId).map((r) => [r.osmId!, r]));
+  let added = 0;
+
+  for (const fields of found) {
+    const osmId = fields.osmId!;
     const existing = byOsmId.get(osmId);
     if (existing) {
       Object.assign(existing, fields);
@@ -100,7 +110,7 @@ async function findOsm(opts: { limit?: number }): Promise<{ found: number; added
     }
   }
   save();
-  return { found: elements.length, added };
+  return { found: found.length, added };
 }
 
 // ---------- Google Places API (New) ----------
