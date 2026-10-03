@@ -1,5 +1,5 @@
 // Thin wrapper around the Anthropic SDK shared by the agents.
-import Anthropic from "@anthropic-ai/sdk";
+import { Anthropic } from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import type { z } from "zod";
 import { config } from "./config.js";

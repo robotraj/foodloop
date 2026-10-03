@@ -15,7 +15,7 @@
   <main>
     <section class="card" id="signup">
       <h2>Rescue surplus food near you</h2>
-      <p class="muted">Amsterdam restaurants share food they'd otherwise throw away. Reserve a portion, pay a small donation for packaging and the app, and pick it up.</p>
+      <p class="muted">Amsterdam restaurants share food they'd otherwise throw away. Reserve a portion at the base price and add an optional tip, then pick it up.</p>
       <div class="row">
         <input id="name" placeholder="Your name" />
         <label class="muted">Alert radius
@@ -48,6 +48,12 @@
       <h2 style="margin:0 0 8px">Available near you</h2>
       <div class="grid" id="listings"></div>
       <p class="muted" id="empty">No food available in your area right now — we'll notify you as soon as a restaurant posts something.</p>
+    </section>
+
+    <section class="card hidden" id="restaurantsSection">
+      <h2>Nearby restaurants</h2>
+      <div class="grid" id="restaurants"></div>
+      <p class="muted" id="restaurantsEmpty">No restaurants found in this area.</p>
     </section>
 
     <section class="card hidden" id="mine">

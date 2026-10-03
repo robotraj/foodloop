@@ -1,7 +1,7 @@
 import express, { type NextFunction, type Request, type Response } from "express";
 import os from "node:os";
 import { config } from "./config.js";
-import { db, newId, nowIso, save } from "./store.js";
+import { db, newId, nowIso, save, seedHostedDemoData } from "./store.js";
 import { distanceKm, AMSTERDAM_CENTER } from "./geo.js";
 import { subscribe, subscribePublic } from "./notify.js";
 import { cancel, HttpError, reserve } from "./reservations.js";
@@ -9,13 +9,16 @@ import { clearSimulatedData, simulatorStatus, startSimulator, stopSimulator } fr
 import { findRestaurants, seedDemoRestaurants } from "./agents/finder.js";
 import { handleReply, parseReplyOffline, runOutreach } from "./agents/outreach.js";
 import { expireListings } from "./agents/publisher.js";
+import path from "node:path";
 import { suggestRecipes } from "./agents/chef.js";
 import { forecastAll } from "./agents/forecast.js";
 import { impact, loopRestaurants, seedDemoPartners } from "./impact.js";
 
-const app = express();
+export const app = express();
 app.use(express.json());
-app.use(express.static("public"));
+const publicDir = path.resolve(process.cwd(), "public");
+app.use(express.static(publicDir));
+app.get("/", (_req, res) => res.sendFile(path.join(publicDir, "index.html")));
 
 const numberOr = (value: unknown, fallback: number) => {
   const n = Number(value);
@@ -28,6 +31,7 @@ function getUser(id: string) {
   return user;
 }
 
+if (process.env.VERCEL === "1" || process.env.VERCEL === "true") seedHostedDemoData();
 // Optional protection for the agent/admin endpoints: set ADMIN_TOKEN and send it as x-admin-token.
 function admin(req: Request, _res: Response, next: NextFunction) {
   if (process.env.ADMIN_TOKEN && req.get("x-admin-token") !== process.env.ADMIN_TOKEN) {
@@ -44,8 +48,7 @@ app.get("/api/config", (_req, res) => {
     model: config.offline ? null : config.model,
     maxPortionsPerListingPerUser: config.maxPortionsPerListingPerUser,
     maxReservationsPerDayPerUser: config.maxReservationsPerDayPerUser,
-    packagingPerPortion: config.packagingPerPortion,
-    platformFee: config.platformFee,
+    basePricePerPortion: config.basePricePerPortion,
     defaultRadiusKm: config.defaultRadiusKm,
     center: AMSTERDAM_CENTER,
   });
@@ -125,13 +128,35 @@ app.get("/api/listings", (req, res) => {
   res.json(listings);
 });
 
+app.get("/api/restaurants/nearby", (req, res) => {
+  const lat = numberOr(req.query.lat, AMSTERDAM_CENTER.lat);
+  const lng = numberOr(req.query.lng, AMSTERDAM_CENTER.lng);
+  const radiusKm = Math.min(25, Math.max(0.5, numberOr(req.query.radiusKm, 10)));
+  const restaurants = db.restaurants
+    .filter((restaurant) => restaurant.status !== "opted_out")
+    .map((restaurant) => ({
+      name: restaurant.name,
+      address: restaurant.address,
+      phone: restaurant.phone,
+      website: restaurant.website,
+      email: restaurant.email,
+      cuisine: restaurant.cuisine,
+      lat: restaurant.lat,
+      lng: restaurant.lng,
+      distanceKm: Math.round(distanceKm({ lat, lng }, restaurant) * 10) / 10,
+    }))
+    .filter((restaurant) => restaurant.distanceKm <= radiusKm)
+    .sort((a, b) => a.distanceKm - b.distanceKm);
+  res.json(restaurants);
+});
+
 app.post("/api/reservations", (req, res) => {
   expireListings();
   const { reservation, listing } = reserve({
     userId: String(req.body?.userId),
     listingId: String(req.body?.listingId),
     portions: numberOr(req.body?.portions, 1),
-    donation: numberOr(req.body?.donation, 0),
+    tip: numberOr(req.body?.tip, 0),
   });
   res.status(201).json({ ...reservation, listing });
 });
@@ -169,7 +194,8 @@ app.get("/api/admin/overview", admin, (_req, res) => {
       users: db.users.length,
       reservations: db.reservations.filter((r) => r.status !== "cancelled").length,
       portionsRescued: db.reservations.filter((r) => r.status !== "cancelled").reduce((s, r) => s + r.portions, 0),
-      donations: db.reservations.filter((r) => r.status !== "cancelled").reduce((s, r) => s + r.donation, 0),
+      tips: db.reservations.filter((r) => r.status !== "cancelled").reduce((s, r) => s + r.tip, 0),
+      revenue: db.reservations.filter((r) => r.status !== "cancelled").reduce((s, r) => s + r.total, 0),
     },
   });
 });
@@ -249,16 +275,20 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
 
 setInterval(expireListings, 60_000).unref();
 
-app.listen(config.port, () => {
-  console.log(`FoodLoop running on http://localhost:${config.port}  (admin: /admin.html)`);
-  for (const nets of Object.values(os.networkInterfaces())) {
-    for (const net of nets ?? []) {
-      if (net.family === "IPv4" && !net.internal) console.log(`  On your phone (same Wi-Fi): http://${net.address}:${config.port}`);
+if (process.env.VERCEL !== "1") {
+  app.listen(config.port, () => {
+    console.log(`FoodLoop running on http://localhost:${config.port}  (admin: /admin.html)`);
+    for (const nets of Object.values(os.networkInterfaces())) {
+      for (const net of nets ?? []) {
+        if (net.family === "IPv4" && !net.internal) console.log(`  On your phone (same Wi-Fi): http://${net.address}:${config.port}`);
+      }
     }
-  }
-  console.log(config.offline ? "Claude: OFFLINE (rule-based fallbacks). Set ANTHROPIC_API_KEY to enable the AI agents." : `Claude: ${config.model}`);
-  if (process.argv.includes("--simulate") || process.env.SIMULATE === "1") {
-    startSimulator().catch((err) => console.error("Simulator failed to start:", err));
-    console.log("Live simulation: ON (pause it in the agent console)");
-  }
-});
+    console.log(config.offline ? "Claude: OFFLINE (rule-based fallbacks). Set ANTHROPIC_API_KEY to enable the AI agents." : `Claude: ${config.model}`);
+    if (process.argv.includes("--simulate") || process.env.SIMULATE === "1") {
+      startSimulator().catch((err) => console.error("Simulator failed to start:", err));
+      console.log("Live simulation: ON (pause it in the agent console)");
+    }
+  });
+}
+
+export default app;

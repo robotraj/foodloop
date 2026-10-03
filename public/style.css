@@ -1,26 +1,17 @@
 :root {
-  --bg: #f6f7f2;
-  --card: #ffffff;
-  --text: #1d2a1f;
-  --muted: #5d6b60;
-  --line: #dfe5da;
-  --brand: #2f7d4a;
-  --brand-ink: #ffffff;
-  --accent: #e8f3ea;
-  --warn: #b3261e;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #111713;
-    --card: #1a221c;
-    --text: #e6ede7;
-    --muted: #9aab9e;
-    --line: #2c3a2f;
-    --brand: #5cc47f;
-    --brand-ink: #0c1a10;
-    --accent: #1f3326;
-    --warn: #ff8a80;
-  }
+  /* Night market palette — dark first */
+  color-scheme: dark;
+  --bg: #121814;
+  --card: #1d271f;
+  --text: #e9efe9;
+  --muted: #a0ada2;
+  --line: #2d3a30;
+  --brand: #7fd89b;
+  --brand-ink: #0c1a10;
+  --accent: #213528;
+  --gold: #f4b400;
+  --highlight: #f08a57;
+  --warn: #ff8a80;
 }
 * { box-sizing: border-box; }
 body {
@@ -36,6 +27,8 @@ header {
 }
 header h1 { margin: 0; font-size: 20px; letter-spacing: -0.01em; }
 header h1 span { color: var(--brand); }
+.stat b { color: var(--text); }
+button:hover { filter: brightness(1.08); }
 main { max-width: 960px; margin: 0 auto; padding: 16px; display: grid; gap: 16px; }
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
 .card h2 { margin: 0 0 8px; font-size: 16px; }
@@ -73,7 +66,7 @@ td, th { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line
 .hidden { display: none !important; }
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
 .stat b { display: block; font-size: 24px; }
-.pill.test { background: #fdecc8; color: #7a4b00; font-weight: 600; }
+.pill.test { background: var(--highlight); color: #2a1206; font-weight: 600; }
 .pill.act-sell { background: #dbe8ff; color: #1f3f7a; }
 .pill.act-donate { background: #fde2ec; color: #7a1f45; }
 .pill.act-reuse { background: #fdecc8; color: #7a4b00; }

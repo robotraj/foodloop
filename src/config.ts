@@ -8,13 +8,15 @@ try {
 
 const num = (name: string, fallback: number) => {
   const raw = process.env[name];
-  const parsed = raw === undefined ? NaN : Number(raw);
+  const parsed = raw === undefined || raw.trim() === "" ? NaN : Number(raw);
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 
 export const config = {
   port: num("PORT", 3000),
-  dataFile: process.env.FOODLOOP_DATA_FILE ?? "data/db.json",
+  dataFile:
+    process.env.FOODLOOP_DATA_FILE ??
+    (process.env.VERCEL === "1" || process.env.VERCEL === "true" ? "/tmp/foodloop-db.json" : "data/db.json"),
 
   // Claude
   model: process.env.FOODLOOP_MODEL ?? "claude-opus-5",
@@ -27,9 +29,8 @@ export const config = {
   maxPortionsPerListingPerUser: num("MAX_PORTIONS_PER_LISTING", 2),
   maxReservationsPerDayPerUser: num("MAX_RESERVATIONS_PER_DAY", 2),
 
-  // Donation (EUR) covers packaging + running the app. Users can give more, never less than the minimum.
-  packagingPerPortion: num("PACKAGING_PER_PORTION", 0.75),
-  platformFee: num("PLATFORM_FEE", 0.5),
+  // Base food price (EUR) plus an optional user tip.
+  basePricePerPortion: num("BASE_PRICE_PER_PORTION", 2.5),
 
   // Router: when surplus is donated, composted or sent to biogas instead of sold in the app
   donateMinPortions: num("DONATE_MIN_PORTIONS", 20),
@@ -50,6 +51,6 @@ export const config = {
   overpassUrl: process.env.OVERPASS_URL ?? "https://overpass-api.de/api/interpreter",
 };
 
-export function minimumDonation(portions: number): number {
-  return Math.round((config.packagingPerPortion * portions + config.platformFee) * 100) / 100;
+export function basePrice(portions: number): number {
+  return Math.round(config.basePricePerPortion * portions * 100) / 100;
 }

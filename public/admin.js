@@ -37,7 +37,8 @@ async function load() {
     ["Listings live", overview.listings.filter((l) => l.status === "active").length],
     ["Users", s.users],
     ["Portions rescued", s.portionsRescued],
-    ["Donations", `€${s.donations.toFixed(2)}`],
+    ["Tips", `€${s.tips.toFixed(2)}`],
+    ["Revenue", `€${s.revenue.toFixed(2)}`],
   ]
     .map(([label, value]) => `<div class="stat"><b>${value}</b><span class="muted">${label}</span></div>`)
     .join("");

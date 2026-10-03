@@ -23,7 +23,7 @@ users nearby ◄── live alert ◄── Publisher ◄── surplus report �
 
 ## Rules in the app
 
-- **Donation, not a price.** Minimum = €0.75 packaging per portion + €0.50 for the app. Users can give more.
+- **Base price plus optional tip.** The default base price is €2.50 per portion. Users can add any tip, including €0.
 - **Purchase limits.** Max 2 portions per listing per person (fewer on small batches), and max 2 listings per person per day.
 - **Pickup window.** Listings expire automatically after the window ends.
 

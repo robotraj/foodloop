@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>FoodLoop — rescue surplus food in Amsterdam</title>
-  <meta name="description" content="Amsterdam restaurants share food they'd otherwise throw away. Reserve a portion nearby for a small packaging donation." />
+  <meta name="description" content="Amsterdam restaurants share food they'd otherwise throw away. Reserve a portion nearby at a fair base price and add an optional tip." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -17,7 +17,7 @@
     <div class="nav-links">
       <a href="#how">How it works</a>
       <a href="#demo">See the agents</a>
-      <a href="#donation">Donation</a>
+      <a href="#pricing">Pricing</a>
       <a href="#restaurants">Restaurants</a>
     </div>
     <a class="btn btn-small" href="app.html">Open the app</a>
@@ -27,7 +27,7 @@
     <div class="hero-copy">
       <p class="eyebrow">Amsterdam · food rescue</p>
       <h1>Good food deserves a <em>second round.</em></h1>
-      <p class="lead">Restaurants tell us what's left at the end of the day. We alert you when it's nearby. You pick it up for a small donation that covers the packaging and keeps the app running.</p>
+      <p class="lead">Restaurants tell us what's left at the end of the day. We alert you when it's nearby. You pick it up at a fair base price and add an optional tip.</p>
       <div class="hero-ctas">
         <a class="btn" href="app.html">Find food near me</a>
         <a class="btn btn-ghost" href="#demo">Watch the agents work</a>
@@ -92,11 +92,11 @@
               <div class="v-notif" data-in="6.7" data-out="7.4" data-fx="pop"><small>NEW FOOD NEARBY</small><b>Lasagne</b>0.4 km · 8 portions</div>
             </div>
 
-            <!-- Scene 4: pickup, donation, food saved -->
+            <!-- Scene 4: pickup, price, food saved -->
             <div class="v-phone v-phone-code" data-in="7.5" data-fx="fade-up">
               <small>Pickup code</small>
               <b class="v-code">482 913</b>
-              <span class="v-donation" data-in="8.0" data-fx="pop">€1.25 donation</span>
+              <span class="v-donation" data-in="8.0" data-fx="pop">€2.50 + tip</span>
             </div>
             <div class="v-flower" id="videoFlower"></div>
             <div class="v-title" data-in="9.0" data-fx="fade-up">Food saved.</div>
@@ -194,12 +194,12 @@
     <p class="muted small">The demo uses FoodLoop's quick rule-based reader. In the live app, Claude reads the replies, so it also copes with messy messages.</p>
   </section>
 
-  <section class="section section-tint" id="donation">
+  <section class="section section-tint" id="pricing">
     <div class="split">
       <div>
         <p class="eyebrow">Fair by design</p>
-        <h2>You donate, you don't pay for the food</h2>
-        <p>Restaurants give their surplus for free. Your donation covers the takeaway packaging and helps keep FoodLoop running. Anything extra is up to you.</p>
+        <h2>A fair base price, plus an optional tip</h2>
+        <p>Every portion has a clear base price. Add a tip if you want to support the restaurant and FoodLoop, or leave it at zero.</p>
         <ul class="rules" id="rules"></ul>
       </div>
       <div class="calc card">
@@ -211,10 +211,9 @@
           <span class="bar-pack"></span><span class="bar-app"></span><span class="bar-extra"></span>
         </div>
         <dl class="breakdown">
-          <div><dt><i class="dot dot-pack"></i>Packaging</dt><dd id="packOut"></dd></div>
-          <div><dt><i class="dot dot-app"></i>App</dt><dd id="appOut"></dd></div>
-          <div><dt><i class="dot dot-extra"></i>Extra</dt><dd id="extraOut2"></dd></div>
-          <div class="total"><dt>Your donation</dt><dd id="totalOut"></dd></div>
+          <div><dt><i class="dot dot-pack"></i>Base price</dt><dd id="packOut"></dd></div>
+          <div><dt><i class="dot dot-extra"></i>Optional tip</dt><dd id="extraOut2"></dd></div>
+          <div class="total"><dt>Your total</dt><dd id="totalOut"></dd></div>
         </dl>
       </div>
     </div>
@@ -231,7 +230,7 @@
         <li><strong>One message a day, at most.</strong> Reply STOP and we'll never contact you again.</li>
         <li><strong>Pickup on your terms.</strong> You choose the time window; listings expire automatically.</li>
         <li><strong>Verified pickups.</strong> Every reservation has a 6-digit code.</li>
-        <li><strong>Free for you.</strong> Users' donations cover packaging and running costs.</li>
+        <li><strong>Transparent pricing.</strong> Users see the base price and choose whether to add a tip.</li>
       </ul>
     </div>
   </section>
