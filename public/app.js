@@ -324,6 +324,7 @@ function renderRestaurants(restaurants) {
       const website = safeWebsite(restaurant.website);
       const hours = todaysHours(restaurant.openingHours);
       return `<article class="card">
+        ${restaurant.onFoodLoop ? `<span class="pill partner" title="This restaurant replied to FoodLoop and shares its surplus">On FoodLoop</span>` : ""}
         <h3>${esc(restaurant.name)}</h3>
         <div class="muted">${restaurant.distanceKm} km · ${esc(restaurant.cuisine || "Restaurant")}</div>
         <p class="meta">${esc(restaurant.address || "Address unavailable")}</p>

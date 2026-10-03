@@ -13,6 +13,17 @@ import path from "node:path";
 import { suggestRecipes } from "./agents/chef.js";
 import { forecastAll } from "./agents/forecast.js";
 import { impact, loopRestaurants, seedDemoPartners } from "./impact.js";
+import {
+  approveAndSend,
+  channelFor,
+  discardDrafts,
+  handleInboundEmail,
+  introsSentToday,
+  prepareOutreach,
+  stageOf,
+  updateDraft,
+} from "./agents/prospector.js";
+import { emailStatus } from "./channels/email.js";
 
 export const app = express();
 app.use(express.json());
@@ -143,6 +154,7 @@ app.get("/api/restaurants/nearby", (req, res) => {
       website: restaurant.website,
       email: restaurant.email,
       cuisine: restaurant.cuisine,
+      onFoodLoop: stageOf(restaurant) === "replied",
       placeId: restaurant.placeId,
       openingHours: restaurant.openingHours,
       lat: restaurant.lat,
@@ -189,6 +201,7 @@ app.get("/api/admin/overview", admin, (_req, res) => {
   res.json({
     restaurants: db.restaurants.map((r) => ({
       ...r,
+      stage: stageOf(r),
       messages: db.messages.filter((m) => m.restaurantId === r.id),
     })),
     listings: [...db.listings].reverse(),
@@ -207,6 +220,51 @@ app.get("/api/admin/overview", admin, (_req, res) => {
 app.post("/api/agents/finder", admin, async (req, res) => {
   const source = req.body?.source === "google" || req.body?.source === "osm" ? req.body.source : undefined;
   res.json(await findRestaurants({ limit: req.body?.limit ? numberOr(req.body.limit, 0) : undefined, source }));
+});
+
+// ---------- Outreach agent (real email, approval before sending) ----------
+
+app.get("/api/admin/outreach", admin, (_req, res) => {
+  const stages: Record<string, number> = { ready: 0, draft: 0, contacted: 0, replied: 0, opted_out: 0, failed: 0, skipped: 0 };
+  for (const r of db.restaurants) {
+    const stage = stageOf(r);
+    if (stage) stages[stage]++;
+  }
+  res.json({
+    email: emailStatus(),
+    dailyCap: config.outreachDailyCap,
+    sentToday: introsSentToday(),
+    inboundWebhook: Boolean(config.inboundEmailSecret),
+    stages,
+    outbox: db.outbox.slice(-300).reverse(),
+  });
+});
+
+app.post("/api/agents/prospector", admin, async (req, res) => {
+  res.json(await prepareOutreach({ limit: numberOr(req.body?.limit, 10), refresh: req.body?.refresh === true }));
+});
+
+const idList = (value: unknown) => (Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : []);
+
+app.post("/api/outbox/approve", admin, async (req, res) => {
+  res.json(await approveAndSend(idList(req.body?.ids)));
+});
+
+app.post("/api/outbox/discard", admin, (req, res) => {
+  res.json({ discarded: discardDrafts(idList(req.body?.ids)) });
+});
+
+app.patch("/api/outbox/:id", admin, (req, res) => {
+  res.json(updateDraft(String(req.params.id), { subject: req.body?.subject, text: req.body?.text }));
+});
+
+// Inbound email webhook (Resend, Postmark, CloudMailin, Mailgun or plain { from, text }).
+// Point your provider at /api/inbound/email?secret=<INBOUND_EMAIL_SECRET>.
+app.post("/api/inbound/email", express.urlencoded({ extended: true, limit: "2mb" }), async (req, res) => {
+  if (!config.inboundEmailSecret) throw new HttpError(404, "Inbound email is not enabled (set INBOUND_EMAIL_SECRET)");
+  if (req.query.secret !== config.inboundEmailSecret) throw new HttpError(401, "Wrong secret");
+  const result = await handleInboundEmail(req.body ?? {});
+  res.json({ matched: result.matched, restaurant: result.restaurant });
 });
 
 app.post("/api/agents/seed", admin, (_req, res) => {
@@ -249,7 +307,10 @@ app.post("/api/agents/chef", admin, async (req, res) => {
 app.post("/api/restaurants/:id/reply", admin, async (req, res) => {
   const text = req.body?.text;
   if (!text || typeof text !== "string") throw new HttpError(400, "text is required");
-  res.json(await handleReply(String(req.params.id), text));
+  const restaurant = db.restaurants.find((r) => r.id === String(req.params.id));
+  if (!restaurant) throw new HttpError(404, "Unknown restaurant");
+  // For a restaurant we emailed, follow-ups and thank-yous go back by real email.
+  res.json(await handleReply(restaurant.id, text, { channel: channelFor(restaurant) }));
 });
 
 app.get("/api/simulator", admin, (_req, res) => {

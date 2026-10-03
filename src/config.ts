@@ -60,6 +60,17 @@ export const config = {
   // Map in the user app (Maps JavaScript API). This key is sent to browsers: restrict it by HTTP referrer.
   googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY?.trim() || undefined,
   googleMapsMapId: process.env.GOOGLE_MAPS_MAP_ID?.trim() || "DEMO_MAP_ID",
+
+  // Outreach agent: real email via Resend (https://resend.com). Drafts are only sent after approval
+  // in the agent console, at most `outreachDailyCap` first-contact emails per day.
+  resendApiKey: process.env.RESEND_API_KEY?.trim() || undefined,
+  outreachFrom: process.env.OUTREACH_FROM_EMAIL?.trim() || undefined, // e.g. "FoodLoop <hello@yourdomain.nl>"
+  outreachReplyTo: process.env.OUTREACH_REPLY_TO?.trim() || undefined,
+  // Who is sending: name and postal address, shown in every email's footer.
+  outreachSenderInfo: process.env.OUTREACH_SENDER_INFO?.trim() || undefined,
+  outreachDailyCap: num("OUTREACH_DAILY_CAP", 20),
+  // Shared secret for the inbound-email webhook: POST /api/inbound/email?secret=...
+  inboundEmailSecret: process.env.INBOUND_EMAIL_SECRET?.trim() || undefined,
 };
 
 export function basePrice(portions: number): number {

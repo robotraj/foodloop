@@ -1,6 +1,6 @@
 # FoodLoop
 
-Rescue surplus restaurant food in Amsterdam. Six agents work together:
+Rescue surplus restaurant food in Amsterdam. Seven agents work together:
 
 | # | Agent | File | What it does |
 |---|-------|------|--------------|
@@ -10,6 +10,7 @@ Rescue surplus restaurant food in Amsterdam. Six agents work together:
 | 4 | **Router** | `src/agents/router.ts` | Decides the best action for every surplus item: **sell** in the app, **donate** to a food bank (big batches), **reuse** in tomorrow's menu (ingredients with too little time left), **compost**, or **biogas** (large inedible volumes). Rules act as a safety floor: anything that looks spoiled never goes to people, whatever Claude says. |
 | 5 | **Chef** | `src/agents/chef.ts` | Turns leftovers into 1-2 recipes. Runs automatically for food routed to "reuse", and from the agent console. |
 | 6 | **Forecast** | `src/agents/forecast.ts` | Predicts today's surplus per restaurant from its history (same weekday first). **Contact likely surplus** in the console messages those restaurants first. |
+| 7 | **Outreach agent (real email)** | `src/agents/prospector.ts` | Finds real restaurants with a public email address, drafts a personal first email for each and **waits for your approval** in the agent console. Sends approved emails (with a daily cap), then updates each restaurant's status from its replies: ready → draft → contacted → replied / opted out. See [Outreach agent](#outreach-agent-real-email). |
 
 `src/impact.ts` closes the loop: it tracks kg rescued, CO₂e avoided, compost and biogas made, and compost delivered to partner farms (food banks, composters, biogas plants, farms). The estimates are configurable in `.env`. Listings from restaurants that compost with a partner get a **Closes the loop** badge. Add fictional demo partners from the console, or let the simulator add them.
 
@@ -80,6 +81,33 @@ npm run live
 - With `ANTHROPIC_API_KEY` set, the simulator uses Claude too, at about 3 API calls per simulated restaurant.
 
 **On your phone:** connect to the same Wi-Fi and open the "On your phone" address the server prints at startup. Browsers only allow location access on `https` or `localhost`, so over Wi-Fi the app falls back to central Amsterdam. On the first run, Windows may ask to allow Node.js through the firewall.
+
+## Outreach agent (real email)
+
+The top of the agent console (`/admin.html`) is built around this agent:
+
+1. **Run outreach agent.** It picks real restaurants with a public email address, nearest to the centre first, and drafts a personal first email for each. Tick *Search OpenStreetMap for new restaurants first* to refresh the list. Only OpenStreetMap has email addresses: 488 of the 3,458 restaurants in `seed/amsterdam-restaurants.json` list one.
+2. **Approve emails.** Read and edit each draft, then **Approve & send selected**. Nothing is sent before this step. Discarded restaurants are skipped from then on. Failed sends stay in the list with the error so you can retry them.
+3. **Status updates.** Replies move each restaurant to *Replied*, and surplus they offer goes through the router into the app. Restaurants that reply STOP move to *Opted out* and are never emailed again. Restaurants that reply show an **On FoodLoop** badge in the user app.
+
+**Setup** (in `.env`):
+
+| Variable | What it's for |
+|---|---|
+| `RESEND_API_KEY` | API key from [Resend](https://resend.com). Verify your sending domain there first. |
+| `OUTREACH_FROM_EMAIL` | Sender, e.g. `FoodLoop <hello@yourdomain.nl>` (on the verified domain). |
+| `OUTREACH_REPLY_TO` | Where restaurants' replies go, e.g. your own inbox. Also used for the unsubscribe header. |
+| `OUTREACH_SENDER_INFO` | Who is sending: organisation name and postal address. Added to every email's footer, with "Reply STOP". |
+| `OUTREACH_DAILY_CAP` | Max first emails per day (default 20). Keep it low while you warm up a new domain. |
+| `INBOUND_EMAIL_SECRET` | Optional. Turns on the inbound webhook (see below). |
+
+**Getting replies back.** Either:
+- **Paste them.** Replies land in the `OUTREACH_REPLY_TO` inbox. Paste one into **Conversation → Log reply**. Follow-up questions and thank-yous then go back to the restaurant by email.
+- **Use a webhook.** Point an inbound-email service (Resend inbound, Postmark, CloudMailin or Mailgun) at `POST https://<your host>/api/inbound/email?secret=<INBOUND_EMAIL_SECRET>`. The sender is matched to a restaurant by email address, and quoted text is removed.
+
+**Before you send.** Dutch and EU rules on unsolicited commercial email also cover messages to businesses. Check that your first email is allowed (for example, by keeping it a personal, low-volume invitation to contact addresses the restaurant published), and always honour STOP. The agent identifies the sender, includes an opt-out, and never re-contacts restaurants that opted out or that you skipped.
+
+**Where to run it.** Run the outreach agent where its data persists: locally (`data/db.json`), or on a server with a disk or database. On Vercel the data lives in `/tmp` and resets when the function restarts, so the outbox and statuses would be lost.
 
 ## Going to production: next steps
 

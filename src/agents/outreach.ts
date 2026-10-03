@@ -50,8 +50,37 @@ function history(restaurantId: string): string {
     .join("\n");
 }
 
-function record(restaurantId: string, direction: "outbound" | "inbound", text: string) {
+export function record(restaurantId: string, direction: "outbound" | "inbound", text: string) {
   db.messages.push({ id: newId(), restaurantId, direction, text, createdAt: nowIso() });
+}
+
+const EMAIL_SYSTEM = `You write first-contact emails for FoodLoop, an Amsterdam app that rescues surplus food from restaurants.
+The restaurant has never heard of FoodLoop. Locals reserve surplus portions at a fair base price and can add an optional tip; the restaurant prevents good food from going to waste, and inedible leftovers can go to compost or biogas partners.
+Write a short, warm email body (4-6 sentences, no subject line, no signature, no placeholders, nothing in brackets). Introduce FoodLoop in one sentence, mention something specific to this restaurant if the details allow it, and ask whether they'd like to join: they can simply reply to this email whenever they have surplus, with roughly how many portions and a pickup time.
+Start with a short Dutch greeting, then write in English. Don't mention STOP or unsubscribing (the footer does that). Never invent facts about the restaurant. Output only the email body.`;
+
+/** First-contact email to a restaurant (the email channel adds sender details and the STOP footer). */
+export async function draftIntroEmail(restaurant: Restaurant): Promise<string> {
+  if (config.offline) {
+    return `Beste team van ${restaurant.name},
+
+We're FoodLoop, a small Amsterdam initiative that makes sure good restaurant food doesn't go to waste. When you have surplus at the end of the day, locals nearby reserve it at a fair base price (they can add a tip) and pick it up at a time that suits you. Food that can't be eaten can go to our compost and biogas partners instead.
+
+Would you like to join? You can simply reply to this email whenever you have surplus, with roughly how many portions and when it can be picked up, and we'll take care of the rest. Questions are very welcome too.
+
+Hartelijke groet,
+FoodLoop`;
+  }
+  return askText({
+    system: EMAIL_SYSTEM,
+    prompt: [
+      `Restaurant: ${restaurant.name}`,
+      restaurant.cuisine ? `Cuisine: ${restaurant.cuisine}` : "",
+      `Address: ${restaurant.address || "Amsterdam"}`,
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  });
 }
 
 async function draftMessage(restaurant: Restaurant): Promise<string> {

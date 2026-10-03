@@ -6,10 +6,10 @@
   <title>FoodLoop Agent Console</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body class="console">
   <header>
     <h1>Food<span>Loop</span> · agents</h1>
-    <span class="muted" id="mode"></span>
+    <span class="row"><span class="live" id="live">Live</span><span class="muted" id="mode"></span></span>
   </header>
 
   <main>
@@ -17,27 +17,76 @@
       <div class="stats" id="stats"></div>
     </section>
 
-    <section class="card">
-      <h2>Live simulation <span class="live" id="live">Live</span></h2>
-      <p class="muted">Real Amsterdam restaurants reply with made-up surplus, which goes through the real agents. Simulated neighbours reserve portions under the same limits as real users. Everything it posts is labelled “Test data”.</p>
-      <div class="row">
-        <button id="simToggle">Start simulation</button>
-        <label class="muted">Speed
-          <select id="simSpeed">
-            <option value="8">Fast (every 8 s)</option>
-            <option value="20" selected>Normal (every 20 s)</option>
-            <option value="45">Slow (every 45 s)</option>
-          </select>
-        </label>
-        <button class="secondary" id="simClear">Clear simulated data</button>
-        <span class="muted" id="simInfo"></span>
+    <!-- ===================== Outreach agent ===================== -->
+    <section class="card agent-hero">
+      <div class="row spread">
+        <div>
+          <p class="eyebrow">Outreach agent</p>
+          <h2 class="hero-title">Find real restaurants, email them, track their status</h2>
+        </div>
+        <span class="channel" id="channel"></span>
       </div>
-      <ul class="feed" id="activity"></ul>
+      <p class="muted">The agent picks real Amsterdam restaurants with a public email address, drafts a personal first email for each, and waits for your approval. Nothing is sent until you approve it. Replies update each restaurant's status automatically, and any surplus they offer goes to the router and the app.</p>
+
+      <div class="pipeline" id="pipeline"></div>
+
+      <div class="row run-row">
+        <label class="muted">Draft emails for <input id="prospectLimit" type="number" min="1" max="50" value="10" style="width:70px" /> restaurants</label>
+        <label class="muted check"><input type="checkbox" id="prospectRefresh" /> Search OpenStreetMap for new restaurants first</label>
+        <button id="prospect">Run outreach agent</button>
+      </div>
+      <p class="muted" id="prospectResult"></p>
+      <p class="notice hidden" id="setupNotice"></p>
     </section>
 
     <section class="card">
-      <h2>1 · Restaurant finder</h2>
-      <p class="muted">Pulls restaurants, cafés and takeaways in Amsterdam from Google Places (when <code>GOOGLE_PLACES_API_KEY</code> is set) or OpenStreetMap. Google is billed per request: a limited run searches the centre first.</p>
+      <div class="row spread">
+        <h2>Approve emails <span class="count" id="draftCount"></span></h2>
+        <div class="row">
+          <label class="muted check"><input type="checkbox" id="selectAll" /> Select all</label>
+          <button class="secondary" id="discard">Discard selected</button>
+          <button id="approve">Approve &amp; send selected</button>
+        </div>
+      </div>
+      <p class="muted" id="approveResult"></p>
+      <div id="drafts"></div>
+    </section>
+
+    <section class="card">
+      <div class="row spread">
+        <h2>Restaurants</h2>
+        <input id="restaurantSearch" type="search" placeholder="Search name, email or address" style="min-width:220px" />
+      </div>
+      <div class="chips" id="stageFilter"></div>
+      <div id="restaurantTable"></div>
+      <div class="row"><button class="secondary hidden" id="moreRestaurants">Show more</button></div>
+    </section>
+
+    <section class="card">
+      <h2>Conversation</h2>
+      <p class="muted">Paste a restaurant's email reply here if it reached your inbox instead of the webhook. The agent reads it, updates the status, and publishes any surplus. For restaurants you emailed, follow-up questions and thank-yous go back to them by email.</p>
+      <div class="row">
+        <select id="restaurant" style="flex:1"></select>
+      </div>
+      <div id="thread"></div>
+      <textarea id="reply" placeholder='The restaurant&apos;s reply, e.g. "Ja! We have 8 portions of vegetarian lasagne and 5 croissants, pickup 21:00-22:00"'></textarea>
+      <div class="row">
+        <button id="sendReply">Log reply</button>
+        <span class="muted" id="replyResult"></span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Sent emails</h2>
+      <div id="sentLog"></div>
+    </section>
+
+    <!-- ===================== Other agents ===================== -->
+    <h2 class="section-title">More agents</h2>
+
+    <section class="card">
+      <h2>Restaurant finder</h2>
+      <p class="muted">Pulls restaurants, cafés and takeaways in Amsterdam from Google Places (when <code>GOOGLE_PLACES_API_KEY</code> is set) or OpenStreetMap. Google is billed per request: a limited run searches the centre first. Only OpenStreetMap has email addresses, so the outreach agent searches there.</p>
       <div class="row">
         <label class="muted">Source
           <select id="findSource">
@@ -54,27 +103,32 @@
     </section>
 
     <section class="card">
-      <h2>2 · Outreach</h2>
-      <p class="muted">Messages restaurants that haven't been contacted yet. The channel is a simulated inbox — type a restaurant's reply below to see the agents react.</p>
+      <h2>Live simulation</h2>
+      <p class="muted">Real Amsterdam restaurants reply with made-up surplus, which goes through the real agents. Simulated neighbours reserve portions under the same limits as real users. Everything it posts is labelled “Test data”, and it never sends email.</p>
       <div class="row">
-        <label class="muted">How many <input id="outreachLimit" type="number" value="5" style="width:70px" /></label>
-        <button id="outreach">Run outreach</button>
-        <button class="secondary" id="smartOutreach" title="Message the restaurants the forecast expects surplus from today">Contact likely surplus</button>
+        <button id="simToggle">Start simulation</button>
+        <label class="muted">Speed
+          <select id="simSpeed">
+            <option value="8">Fast (every 8 s)</option>
+            <option value="20" selected>Normal (every 20 s)</option>
+            <option value="45">Slow (every 45 s)</option>
+          </select>
+        </label>
+        <button class="secondary" id="simClear">Clear simulated data</button>
+        <span class="muted" id="simInfo"></span>
       </div>
-      <p class="muted" id="outreachResult"></p>
+      <ul class="feed" id="activity"></ul>
     </section>
 
     <section class="card">
-      <h2>Conversations</h2>
+      <h2>Practice outreach (simulated inbox)</h2>
+      <p class="muted">Sends nothing: messages are only stored here, and you can answer as the restaurant in Conversation. Handy for demos.</p>
       <div class="row">
-        <select id="restaurant" style="flex:1"></select>
+        <label class="muted">How many <input id="outreachLimit" type="number" value="5" style="width:70px" /></label>
+        <button class="secondary" id="outreach">Run practice outreach</button>
+        <button class="secondary" id="smartOutreach" title="Message the restaurants the forecast expects surplus from today">Contact likely surplus</button>
       </div>
-      <div id="thread"></div>
-      <textarea id="reply" placeholder='Simulate the restaurant reply, e.g. "Ja! We have 8 portions of vegetarian lasagne and 5 croissants, pickup 21:00-22:00"'></textarea>
-      <div class="row">
-        <button id="sendReply">Send as restaurant</button>
-        <span class="muted" id="replyResult"></span>
-      </div>
+      <p class="muted" id="outreachResult"></p>
     </section>
 
     <section class="card">
@@ -85,13 +139,13 @@
     </section>
 
     <section class="card">
-      <h2>3 · Published listings</h2>
+      <h2>Published listings</h2>
       <div id="listings"></div>
     </section>
 
     <section class="card">
       <h2>Surplus forecast</h2>
-      <p class="muted">Expected surplus today from each restaurant's history: same weekday first, then all days. “Contact likely surplus” in Outreach uses this ranking.</p>
+      <p class="muted">Expected surplus today from each restaurant's history: same weekday first, then all days. “Contact likely surplus” uses this ranking.</p>
       <div id="forecast"></div>
     </section>
 
@@ -118,6 +172,7 @@
     </section>
   </main>
 
+  <div class="toast" id="toast"></div>
   <script src="admin.js"></script>
 </body>
 </html>

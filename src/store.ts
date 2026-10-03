@@ -119,6 +119,23 @@ export interface Partner {
   createdAt: string;
 }
 
+/** An email from the outreach agent. First contacts start as drafts and are only sent after approval. */
+export interface OutboxEmail {
+  id: string;
+  restaurantId: string;
+  restaurantName: string;
+  to: string;
+  subject: string;
+  text: string;
+  /** "intro" = first contact (needs approval); "reply" = answer in a conversation the restaurant replied to. */
+  kind: "intro" | "reply";
+  status: "draft" | "sent" | "failed" | "discarded";
+  error?: string;
+  providerId?: string;
+  createdAt: string;
+  sentAt?: string;
+}
+
 export interface Notification {
   id: string;
   userId: string;
@@ -136,6 +153,7 @@ interface Data {
   notifications: Notification[];
   dispositions: Disposition[];
   partners: Partner[];
+  outbox: OutboxEmail[];
 }
 
 const empty = (): Data => ({
@@ -147,6 +165,7 @@ const empty = (): Data => ({
   notifications: [],
   dispositions: [],
   partners: [],
+  outbox: [],
 });
 
 function load(): Data {
