@@ -1,20 +1,20 @@
-// 10-second "how it works" explainer. Every frame is a pure function of the time t, so it can be
-// played, paused and scrubbed like a real video. Elements declare their timing in the markup:
-//   data-in="2.5" data-out="4.9" data-fx="pop|fade|fade-up|slide-left|grow|ping" [data-dur="0.9"]
+// 20-second "how it works" promo (media/foodloop-promo.mp4, made from media/promo.html).
+// The site's own controls drive a muted <video>: big play button, scrubber, clock and captions
+// that describe each scene, since the video has no sound.
 (function () {
-  const DURATION = 10;
   const HOLD_AT_END = 2; // seconds to rest on the last frame before looping
-  const FLOWER_AT = 8.2;
   const captions = [
-    [0, "7:45 pm — a restaurant has 8 portions left over"],
-    [2.5, "Our agent asks; the restaurant just replies"],
-    [5, "Everyone within walking distance gets an alert"],
-    [7.5, "Pick it up at a fair price. Food saved."],
+    [0, "Just before closing, a restaurant still has good food left"],
+    [3.6, "FoodLoop sends one message. The restaurant just replies."],
+    [7.6, "The router picks the best next life for every item"],
+    [11.6, "Neighbours nearby get an alert and pick it up"],
+    [15.4, "Even the peels come back as food"],
+    [18.4, "Every surplus portion finds its best next life"],
   ];
 
   const player = document.getElementById("player");
   if (!player) return;
-  const stage = document.getElementById("stage");
+  const video = document.getElementById("promo");
   const scrub = document.getElementById("scrub");
   const clock = document.getElementById("clock");
   const caption = document.getElementById("caption");
@@ -22,113 +22,68 @@
   const bigPlay = document.getElementById("bigPlay");
   const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const flower = Sunflower.create({ stem: true });
-  document.getElementById("videoFlower").append(flower);
-  let flowerOpen = false;
+  const duration = () => (Number.isFinite(video.duration) ? video.duration : 20);
+  const fmt = (s) => `0:${String(Math.floor(s)).padStart(2, "0")}`;
 
-  const tracks = [...stage.querySelectorAll("[data-in]")].map((node) => ({
-    node,
-    in: Number(node.dataset.in),
-    out: node.dataset.out ? Number(node.dataset.out) : Infinity,
-    fx: node.dataset.fx || "fade",
-    dur: Number(node.dataset.dur || 0.45),
-  }));
-
-  const clamp = (x) => Math.min(1, Math.max(0, x));
-  const easeOut = (x) => 1 - Math.pow(1 - x, 3);
-  const easeBack = (x) => 1 + 2.2 * Math.pow(x - 1, 3) + 1.2 * Math.pow(x - 1, 2);
-
-  function style(fx, p) {
-    switch (fx) {
-      case "fade-up": return `translateY(${(1 - easeOut(p)) * 16}px)`;
-      case "pop": return `scale(${0.6 + 0.4 * easeBack(p)})`;
-      case "slide-left": return `translateX(${(1 - easeOut(p)) * 80}px)`;
-      case "grow": return `scale(${easeOut(p)})`;
-      case "ping": return `scale(${0.4 + 0.6 * easeBack(p)})`;
-      default: return "";
-    }
-  }
-
-  function render(t) {
-    for (const tr of tracks) {
-      const p = clamp((t - tr.in) / tr.dur);
-      const q = clamp((t - tr.out) / 0.3);
-      tr.node.style.opacity = String(p * (1 - q));
-      tr.node.style.transform = style(tr.fx, p);
-      tr.node.classList.toggle("on", t >= tr.in + tr.dur && t < tr.out);
-    }
-    if (t >= FLOWER_AT && !flowerOpen) Sunflower.bloom(flower);
-    if (t < FLOWER_AT && flowerOpen) Sunflower.reset(flower);
-    flowerOpen = t >= FLOWER_AT;
-
+  function render() {
+    const t = video.currentTime;
     const text = (captions.findLast(([at]) => t >= at) ?? captions[0])[1];
     if (caption.textContent !== text) caption.textContent = text;
+    scrub.max = String(Math.round(duration() * 1000));
     scrub.value = String(Math.round(t * 1000));
-    scrub.style.setProperty("--progress", `${(t / DURATION) * 100}%`);
-    clock.textContent = `0:${String(Math.floor(Math.min(t, DURATION))).padStart(2, "0")} / 0:10`;
+    scrub.style.setProperty("--progress", `${(t / duration()) * 100}%`);
+    clock.textContent = `${fmt(Math.min(t, duration()))} / ${fmt(duration())}`;
+  }
+
+  function setState() {
+    const playing = !video.paused;
+    player.classList.toggle("playing", playing);
+    player.classList.toggle("ended", video.ended && !playing);
+    playBtn.setAttribute("aria-label", playing ? "Pause" : video.ended ? "Replay" : "Play");
   }
 
   // ---- Playback ----
-  let t = 0;
-  let playing = false;
   let userPaused = false;
-  let last = 0;
-  let endedAt = null;
+  let restTimer;
 
-  function setState() {
-    const ended = t >= DURATION;
-    player.classList.toggle("playing", playing);
-    player.classList.toggle("ended", ended && !playing);
-    playBtn.setAttribute("aria-label", playing ? "Pause" : ended ? "Replay" : "Play");
-  }
-
-  function frame(now) {
-    if (!playing) return;
-    // rAF timestamps can be slightly earlier than the performance.now() taken in play().
-    const dt = Math.min(0.1, Math.max(0, (now - last) / 1000));
-    last = now;
-    if (t < DURATION) {
-      t = Math.min(DURATION, t + dt);
-      render(t);
-    } else {
-      endedAt ??= now;
-      if (now - endedAt > HOLD_AT_END * 1000) {
-        t = 0;
-        endedAt = null;
-        render(t);
-      }
-    }
-    requestAnimationFrame(frame);
-  }
-
-  function play() {
-    if (playing) return;
-    if (t >= DURATION) t = 0;
-    playing = true;
-    endedAt = null;
-    last = performance.now();
-    setState();
-    requestAnimationFrame(frame);
-  }
-
-  function pause() {
-    playing = false;
-    setState();
-  }
+  const play = () => {
+    clearTimeout(restTimer);
+    if (video.ended) video.currentTime = 0;
+    video.play().catch(() => {}); // autoplay can be refused; the big play button stays visible
+  };
+  const pause = () => video.pause();
 
   function toggle() {
-    if (playing) {
-      userPaused = true;
-      pause();
-    } else {
+    if (video.paused) {
       userPaused = false;
       play();
+    } else {
+      userPaused = true;
+      pause();
     }
   }
+
+  // Rest on the end card, then loop while it is on screen.
+  video.addEventListener("ended", () => {
+    setState();
+    restTimer = setTimeout(() => {
+      if (!userPaused && onScreen) {
+        video.currentTime = 0;
+        play();
+      }
+    }, HOLD_AT_END * 1000);
+  });
+  for (const ev of ["play", "pause", "seeked"]) video.addEventListener(ev, setState);
+  for (const ev of ["timeupdate", "loadedmetadata", "seeked"]) video.addEventListener(ev, render);
+  // timeupdate fires only ~4×/s; keep the scrubber smooth while playing.
+  (function tick() {
+    if (!video.paused) render();
+    requestAnimationFrame(tick);
+  })();
 
   playBtn.addEventListener("click", toggle);
   bigPlay.addEventListener("click", toggle);
-  stage.parentElement.addEventListener("click", toggle);
+  video.parentElement.addEventListener("click", toggle);
   player.addEventListener("keydown", (e) => {
     if (e.target === scrub) return;
     if (e.key === " " || e.key === "k") {
@@ -139,32 +94,28 @@
 
   let wasPlaying = false;
   scrub.addEventListener("pointerdown", () => {
-    wasPlaying = playing;
+    wasPlaying = !video.paused;
     pause();
   });
   scrub.addEventListener("input", () => {
-    t = Number(scrub.value) / 1000;
-    render(t);
-    setState();
+    video.currentTime = Number(scrub.value) / 1000;
+    render();
   });
   scrub.addEventListener("change", () => {
     if (wasPlaying) play();
   });
 
-  // Scale the fixed 640×400 stage to the player's width.
-  new ResizeObserver(([entry]) => {
-    stage.style.setProperty("--scale", String(entry.contentRect.width / 640));
-  }).observe(stage.parentElement);
-
   // Autoplay while on screen (unless the visitor paused it or prefers reduced motion).
+  let onScreen = false;
   new IntersectionObserver(
     ([entry]) => {
-      if (entry.isIntersecting && !userPaused && !reducedMotion) play();
-      else if (!entry.isIntersecting) pause();
+      onScreen = entry.isIntersecting;
+      if (onScreen && !userPaused && !reducedMotion) play();
+      else if (!onScreen) pause();
     },
     { threshold: 0.5 },
   ).observe(player);
 
-  render(t);
+  render();
   setState();
 })();

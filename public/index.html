@@ -42,66 +42,9 @@
     <div class="hero-media">
       <div class="hero-flower" data-sunflower data-stem data-delay="0.2"></div>
 
-      <figure class="player" id="player" tabindex="0" aria-label="10-second animation: how FoodLoop works. Press space to play or pause.">
+      <figure class="player" id="player" tabindex="0" aria-label="20-second video: how FoodLoop works, from a restaurant's leftovers to compost and back. Press space to play or pause.">
         <div class="stage-wrap">
-          <div class="stage" id="stage" aria-hidden="true">
-            <!-- Scene 1: leftovers at closing time -->
-            <div class="v-chip v-clock" data-in="0.2" data-out="2.4" data-fx="fade-up">19:45</div>
-            <svg class="v-store" data-in="0" data-out="2.4" data-fx="fade-up" viewBox="0 0 220 210">
-              <rect x="20" y="60" width="180" height="140" rx="6" class="v-wall" />
-              <path d="M10 40 H210 L200 78 H20 Z" class="v-awning" />
-              <path d="M40 40 L36 78 M70 40 L68 78 M100 40 V78 M130 40 L132 78 M160 40 L164 78 M190 40 L196 78" class="v-stripes" />
-              <rect x="40" y="96" width="70" height="56" rx="4" class="v-window" />
-              <rect x="128" y="96" width="50" height="104" rx="4" class="v-door" />
-              <rect x="50" y="14" width="120" height="26" rx="6" class="v-sign" />
-              <text x="110" y="32" text-anchor="middle" class="v-sign-text">TRATTORIA</text>
-            </svg>
-            <div class="v-tray" data-in="0.5" data-out="2.4" data-fx="fade-up">
-              <span data-in="0.7" data-out="2.4" data-fx="pop"></span><span data-in="0.8" data-out="2.4" data-fx="pop"></span>
-              <span data-in="0.9" data-out="2.4" data-fx="pop"></span><span data-in="1.0" data-out="2.4" data-fx="pop"></span>
-              <span data-in="1.1" data-out="2.4" data-fx="pop"></span><span data-in="1.2" data-out="2.4" data-fx="pop"></span>
-              <span data-in="1.3" data-out="2.4" data-fx="pop"></span><span data-in="1.4" data-out="2.4" data-fx="pop"></span>
-            </div>
-            <div class="v-label v-tray-label" data-in="1.6" data-out="2.4" data-fx="fade-up">8 portions left</div>
-
-            <!-- Scene 2: the outreach agent asks, the restaurant replies -->
-            <div class="v-agent" data-in="2.5" data-out="4.9" data-fx="fade">Outreach agent</div>
-            <div class="v-bubble v-out" data-in="2.6" data-out="4.9" data-fx="pop">Hoi! Any surplus food today?</div>
-            <div class="v-bubble v-in v-typing" data-in="3.1" data-out="3.6" data-fx="pop"><i></i><i></i><i></i></div>
-            <div class="v-bubble v-in" data-in="3.6" data-out="4.9" data-fx="pop">Ja! 8 portions of lasagne, pickup 21:00</div>
-            <div class="v-chips">
-              <span data-in="4.0" data-out="4.9" data-fx="pop">8 portions</span>
-              <span data-in="4.15" data-out="4.9" data-fx="pop">21:00–22:00</span>
-              <span data-in="4.3" data-out="4.9" data-fx="pop">vegetarian</span>
-            </div>
-
-            <!-- Scene 3: nearby users get an alert -->
-            <svg class="v-map" data-in="5.0" data-out="7.4" data-fx="fade" viewBox="0 0 640 400">
-              <path d="M120 400 A 260 260 0 0 1 520 400 M170 400 A 210 210 0 0 1 470 400 M220 400 A 160 160 0 0 1 420 400" class="v-canal" />
-              <path d="M0 120 H640 M0 250 H640 M200 0 V400 M450 0 V400" class="v-street" />
-            </svg>
-            <div class="v-radius" data-in="5.3" data-out="7.4" data-fx="grow" data-dur="0.9"></div>
-            <div class="v-pin" data-in="5.1" data-out="7.4" data-fx="pop"></div>
-            <span class="v-user" style="left:210px;top:150px" data-in="6.0" data-out="7.4" data-fx="ping"></span>
-            <span class="v-user" style="left:300px;top:110px" data-in="6.1" data-out="7.4" data-fx="ping"></span>
-            <span class="v-user" style="left:380px;top:250px" data-in="6.2" data-out="7.4" data-fx="ping"></span>
-            <span class="v-user" style="left:250px;top:280px" data-in="6.3" data-out="7.4" data-fx="ping"></span>
-            <span class="v-user v-far" style="left:40px;top:60px" data-in="5.2" data-out="7.4" data-fx="fade"></span>
-            <span class="v-user v-far" style="left:590px;top:330px" data-in="5.2" data-out="7.4" data-fx="fade"></span>
-            <div class="v-phone v-phone-alert" data-in="6.3" data-out="7.4" data-fx="slide-left">
-              <div class="v-notif" data-in="6.7" data-out="7.4" data-fx="pop"><small>NEW FOOD NEARBY</small><b>Lasagne</b>0.4 km · 8 portions</div>
-            </div>
-
-            <!-- Scene 4: pickup, price, food saved -->
-            <div class="v-phone v-phone-code" data-in="7.5" data-fx="fade-up">
-              <small>Pickup code</small>
-              <b class="v-code">482 913</b>
-              <span class="v-donation" data-in="8.0" data-fx="pop">€2.50 + tip</span>
-            </div>
-            <div class="v-flower" id="videoFlower"></div>
-            <div class="v-title" data-in="9.0" data-fx="fade-up">Food saved.</div>
-            <div class="v-logo" data-in="9.3" data-fx="fade-up">Food<span>Loop</span></div>
-          </div>
+          <video id="promo" src="media/foodloop-promo.mp4" poster="media/foodloop-promo-poster.jpg" muted playsinline preload="metadata" aria-hidden="true"></video>
         </div>
 
         <button class="big-play" id="bigPlay" aria-label="Play">
@@ -115,7 +58,7 @@
             <svg viewBox="0 0 24 24" class="i-replay"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z" /></svg>
           </button>
           <input type="range" id="scrub" min="0" max="10000" step="10" value="0" aria-label="Seek" />
-          <span class="clock" id="clock">0:00 / 0:10</span>
+          <span class="clock" id="clock">0:00 / 0:20</span>
         </div>
       </figure>
     </div>
